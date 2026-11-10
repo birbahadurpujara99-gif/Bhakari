@@ -1,0 +1,6 @@
+{
+  "name": "Bhakari",
+  "description": "Bhakari (भकारी) - Vibrant Nepali & English Social Media with posts, messaging, Bluetooth nearby sharing, and verified CEO Bir Pujara profile",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
