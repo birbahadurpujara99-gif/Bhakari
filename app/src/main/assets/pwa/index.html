@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Bhakari | भकारी - Nepali & English Social Media</title>
+  
+  <!-- PWA Meta Tags -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#10B981">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bhakari">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0B0F19;
+      --surface: #151D2C;
+      --surface-variant: #1F293D;
+      --primary: #F59E0B;
+      --primary-dark: #D97706;
+      --crimson: #E11D48;
+      --green: #10B981;
+      --green-dark: #059669;
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', 'Mukta', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      overflow-x: hidden;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 520px;
+      min-height: 100vh;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 0 50px rgba(0,0,0,0.5);
+      padding-bottom: 85px;
+    }
+
+    /* Top App Bar */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(21, 29, 44, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1.5px solid var(--primary);
+      object-fit: cover;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.2px;
+    }
+    .brand-title span {
+      color: var(--crimson);
+    }
+    .brand-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-btn {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    /* THE GREEN INSTALL APP BUTTON (MANDATORY REQUEST) */
+    .btn-install-green {
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      color: #FFFFFF !important;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-install-green:active {
+      transform: scale(0.96);
+    }
+    .btn-install-green svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    /* Home Green Install App Banner */
+    .pwa-hero-banner {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(245, 158, 11, 0.1) 100%);
+      border: 1.5px solid rgba(16, 185, 129, 0.4);
+      border-radius: 18px;
+      margin: 12px 14px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+    .pwa-hero-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .pwa-icon-glow {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+    }
+    .pwa-hero-text h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .pwa-hero-text p {
+      font-size: 0.75rem;
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .btn-install-large {
+      background: #10B981;
+      color: white;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Stories Horizontal Bar */
+    .stories-container {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .stories-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stories-row {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 4px;
+    }
+    .stories-row::-webkit-scrollbar { display: none; }
+
+    .story-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      min-width: 62px;
+    }
+    .story-avatar-wrap {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      padding: 2.5px;
+      background: linear-gradient(45deg, var(--primary), var(--crimson));
+      position: relative;
+    }
+    .story-avatar-wrap.ceo-ring {
+      background: conic-gradient(from 0deg, var(--green), var(--primary), var(--green));
+      animation: rotateRing 6s linear infinite;
+    }
+    .story-avatar-wrap img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #000;
+    }
+    .story-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      background: var(--green);
+      color: white;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      border: 2px solid var(--surface);
+    }
+    .story-name {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-main);
+      max-width: 65px;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .story-name.ceo-label {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    /* Post Composer Trigger */
+    .composer-card {
+      background: var(--surface-variant);
+      margin: 10px 14px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .composer-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .composer-input-fake {
+      flex: 1;
+      background: rgba(0,0,0,0.25);
+      padding: 9px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Filter Chips */
+    .filter-chips {
+      display: flex;
+      gap: 8px;
+      padding: 4px 14px 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filter-chips::-webkit-scrollbar { display: none; }
+    .chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 18px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .chip.active {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .chip.ceo-chip.active {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    /* Feed Posts */
+    .posts-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 4px 14px;
+    }
+
+    .post-card {
+      background: var(--surface-variant);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .author-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .author-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      position: relative;
+    }
+    .author-meta h5 {
+      font-size: 0.92rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .verified-tick {
+      background: var(--green);
+      color: white;
+      border-radius: 50%;
+      width: 15px;
+      height: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: bold;
+    }
+    .ceo-badge-tag {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.65rem;
+      font-weight: 800;
+    }
+    .post-time {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .bt-share-pill {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .post-content {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #E2E8F0;
+    }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .post-tag {
+      color: var(--primary);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .post-media-img {
+      width: 100%;
+      height: 220px;
+      border-radius: 14px;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .post-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .action-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .action-btn.liked {
+      color: var(--crimson);
+    }
+    .action-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    /* CEO Profile Overlay View */
+    .view-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 200;
+      overflow-y: auto;
+      display: none;
+      flex-direction: column;
+    }
+    .view-overlay.active {
+      display: flex;
+    }
+    .cover-header {
+      width: 100%;
+      height: 200px;
+      position: relative;
+    }
+    .cover-header img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .cover-back-btn {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(0,0,0,0.6);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+    }
+    .profile-body {
+      padding: 0 16px 80px;
+      position: relative;
+    }
+    .profile-avatar-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: -46px;
+      margin-bottom: 12px;
+    }
+    .profile-avatar-large {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 3.5px solid var(--green);
+      object-fit: cover;
+      background: var(--surface);
+    }
+    .profile-actions-row {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-profile-msg {
+      background: var(--primary);
+      color: black;
+      font-weight: 700;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 18px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .btn-profile-follow {
+      background: var(--green);
+      color: white;
+      font-weight: 700;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 18px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .ceo-verify-badge-card {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid var(--green);
+      border-radius: 14px;
+      padding: 12px;
+      margin: 14px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Bluetooth Nearby View */
+    .radar-box {
+      background: var(--surface-variant);
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      margin: 14px;
+      border: 1px solid var(--border);
+    }
+    .radar-circle {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.15);
+      border: 2px dashed var(--green);
+      margin: 0 auto 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      animation: pulseRadar 2s infinite ease-in-out;
+    }
+    @keyframes pulseRadar {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.8; }
+    }
+    .peer-card {
+      background: var(--surface-variant);
+      border-radius: 16px;
+      padding: 14px;
+      margin: 0 14px 10px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 520px;
+      background: rgba(21, 29, 44, 0.98);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 16px;
+      z-index: 150;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: none;
+      border: none;
+      transition: color 0.15s;
+    }
+    .nav-item.active {
+      color: var(--primary);
+    }
+    .nav-item.active.green-nav {
+      color: var(--green);
+    }
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+    .fab-post {
+      background: var(--primary);
+      color: black !important;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: -16px;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 95px;
+      left: 50%;
+      transform: translateX(-50%) translateY(50px);
+      background: #10B981;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 24px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 999;
+      pointer-events: none;
+      text-align: center;
+      max-width: 90%;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Modal Sheet */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(5px);
+      z-index: 300;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-sheet {
+      background: var(--surface);
+      width: 100%;
+      max-width: 520px;
+      border-radius: 24px 24px 0 0;
+      padding: 20px;
+      border-top: 1px solid var(--border);
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- Top App Bar with Logo, Bilingual Toggle, and GREEN Install App Button -->
+    <header class="top-bar">
+      <div class="brand-group" onclick="showCeoProfile()">
+        <img src="/logo.jpg" alt="Bhakari Logo" class="brand-logo" onerror="this.src='/icons/icon-192.png'">
+        <div>
+          <div class="brand-title">Bhakari <span>| भकारी</span></div>
+          <div class="brand-sub" id="brandTagline">विश्वभरका नेपालीहरूको सञ्जाल</div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Language Switcher Pill -->
+        <button class="lang-btn" id="langSwitchBtn" onclick="toggleLanguage()">🇬🇧 English</button>
+        
+        <!-- MANDATORY: Green Install App Button on Header -->
+        <button class="btn-install-green" id="topInstallBtn" onclick="triggerBrowserInstallPrompt()" title="Install Bhakari on Android Chrome">
+          <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+          <span id="topInstallBtnText">Install App</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MANDATORY: Green Install App Banner on Home Screen -->
+    <section class="pwa-hero-banner" id="pwaHomeBanner">
+      <div class="pwa-hero-left">
+        <div class="pwa-icon-glow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+          </svg>
+        </div>
+        <div class="pwa-hero-text">
+          <h4 id="bannerTitle">भकारी एप इन्स्टल गर्नुहोस्</h4>
+          <p id="bannerSub">Android Chrome मा १-ट्यापमा इन्स्टल हुने PWA</p>
+        </div>
+      </div>
+      <!-- Green Install Button -->
+      <button class="btn-install-large" id="mainInstallBtn" onclick="triggerBrowserInstallPrompt()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        <span id="bannerBtnText">Install App</span>
+      </button>
+    </section>
+
+    <!-- Stories Bar (CEO Bir Pujara featured with verified ring) -->
+    <section class="stories-container">
+      <div class="stories-title" id="storiesHeading">कथा र क्षणहरू (Stories)</div>
+      <div class="stories-row">
+        <!-- CEO Bir Pujara Story -->
+        <div class="story-item" onclick="showCeoProfile()">
+          <div class="story-avatar-wrap ceo-ring">
+            <img src="/ceo.jpg" alt="CEO Bir Pujara" onerror="this.src='/icons/icon-192.png'">
+            <div class="story-badge">✓</div>
+          </div>
+          <span class="story-name ceo-label">CEO Bir</span>
+        </div>
+
+        <!-- Aarav Story -->
+        <div class="story-item" onclick="showToast('Aarav Sharma story viewing')">
+          <div class="story-avatar-wrap">
+            <img src="/cover.jpg" alt="Aarav">
+          </div>
+          <span class="story-name">Aarav</span>
+        </div>
+
+        <!-- Prakriti Story -->
+        <div class="story-item" onclick="showToast('Prakriti Shrestha story viewing')">
+          <div class="story-avatar-wrap">
+            <img src="/ceo.jpg" alt="Prakriti">
+          </div>
+          <span class="story-name">Prakriti</span>
+        </div>
+
+        <!-- Himal Story -->
+        <div class="story-item" onclick="showToast('Himal Vibes story viewing')">
+          <div class="story-avatar-wrap">
+            <img src="/cover.jpg" alt="Himal">
+          </div>
+          <span class="story-name">Himal</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Post Composer Card -->
+    <div class="composer-card" onclick="openNewPostModal()">
+      <img src="/ceo.jpg" class="composer-avatar" alt="Avatar">
+      <div class="composer-input-fake" id="composerPlaceholder">तपाईंको मनमा के छ? भकारीमा लेख्नुहोस्...</div>
+      <span style="color: var(--primary); font-size: 1.2rem;">📷</span>
+    </div>
+
+    <!-- Filter Chips -->
+    <div class="filter-chips">
+      <div class="chip active" onclick="setFilter(this, 'all')">सबै (All)</div>
+      <div class="chip ceo-chip" onclick="setFilter(this, 'ceo')">सिईओ अपडेट (CEO Updates)</div>
+      <div class="chip" onclick="setFilter(this, 'trending')">ट्रेन्डिङ (Trending)</div>
+      <div class="chip" onclick="setFilter(this, 'culture')">नेपाली संस्कृति (Culture)</div>
+    </div>
+
+    <!-- Feed Posts -->
+    <main class="posts-stream" id="postsStream">
+      <!-- CEO Official Post -->
+      <article class="post-card" data-category="ceo">
+        <div class="post-header">
+          <div class="author-info" onclick="showCeoProfile()">
+            <img src="/ceo.jpg" class="author-avatar" alt="CEO Bir Pujara">
+            <div class="author-meta">
+              <h5>
+                <span class="author-name">वीर पुजारा (Bir Pujara)</span>
+                <span class="verified-tick">✓</span>
+                <span class="ceo-badge-tag">CEO</span>
+              </h5>
+              <span class="post-time">भर्खरै (Just now) • काठमाडौं, नेपाल</span>
+            </div>
+          </div>
+          <button class="bt-share-pill" onclick="openBluetoothShare('post_ceo_1')">
+            <span>📡</span> ब्लुटुथ सेयर
+          </button>
+        </div>
+
+        <p class="post-content" id="postContentCeo">
+          नमस्ते सम्पूर्णमा! 🌾 सिईओको रूपमा, नेपालको आफ्नै मौलिक रङ्गीन सामाजिक सञ्जाल <b>भकारी (Bhakari)</b> को शुभारम्भ गर्न पाउँदा म अत्यन्तै हर्षित छु। अब फोटो, भिडियो पोस्ट गर्न, च्याट गर्न र इन्टरनेट नहुँदा पनि नजिकका साथीहरूसँग <b>ब्लुटुथ (Bluetooth)</b> मार्फत पोस्ट र सम्पर्क आदान-प्रदान गर्न सक्नुहुन्छ! सबैलाई हार्दिक स्वागत छ! 🇳🇵✨
+        </p>
+
+        <div class="post-tags">
+          <span class="post-tag">#BhakariLaunch</span>
+          <span class="post-tag">#CEOAnnouncement</span>
+          <span class="post-tag">#BirPujara</span>
+          <span class="post-tag">#DigitalNepal</span>
+        </div>
+
+        <img src="/cover.jpg" class="post-media-img" alt="Bhakari Community Celebration">
+
+        <div class="post-actions">
+          <button class="action-btn liked" onclick="toggleLike(this, 3842)">
+            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <span class="count">3,842</span>
+          </button>
+          <button class="action-btn" onclick="openCommentsModal()">
+            <svg viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg>
+            <span>248</span>
+          </button>
+          <button class="action-btn" onclick="openShareModal()">
+            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+            <span>590</span>
+          </button>
+          <button class="bt-share-pill" onclick="openBluetoothShare('post_ceo_1')">
+            📡 सेयर
+          </button>
+        </div>
+      </article>
+
+      <!-- Cultural Photo Post -->
+      <article class="post-card" data-category="culture">
+        <div class="post-header">
+          <div class="author-info">
+            <img src="/cover.jpg" class="author-avatar" alt="Aarav">
+            <div class="author-meta">
+              <h5>
+                <span class="author-name">आरभ शर्मा (Aarav Sharma)</span>
+                <span class="verified-tick">✓</span>
+              </h5>
+              <span class="post-time">२ घण्टा अघि • पोखरा, नेपाल</span>
+            </div>
+          </div>
+          <button class="bt-share-pill" onclick="openBluetoothShare('post_aarav_2')">
+            <span>📡</span> ब्लुटुथ सेयर
+          </button>
+        </div>
+
+        <p class="post-content">
+          फेवातालको शान्त पानीमा देखिएको माछापुच्छ्रे हिमालको मनोरम दृश्य। प्रकृतिले दिने शान्ति अद्वितीय छ। 🏔️🚣
+        </p>
+
+        <div class="post-tags">
+          <span class="post-tag">#Pokhara</span>
+          <span class="post-tag">#VisitNepal</span>
+          <span class="post-tag">#Annapurna</span>
+        </div>
+
+        <div class="post-actions">
+          <button class="action-btn" onclick="toggleLike(this, 980)">
+            <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <span class="count">980</span>
+          </button>
+          <button class="action-btn" onclick="openCommentsModal()">
+            <svg viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg>
+            <span>45</span>
+          </button>
+          <button class="action-btn" onclick="openShareModal()">
+            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+            <span>68</span>
+          </button>
+        </div>
+      </article>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="switchTab('feed', this)">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <span class="nav-label" id="navHome">गृहपृष्ठ</span>
+      </button>
+
+      <button class="nav-item" onclick="switchTab('messages', this)">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+        <span class="nav-label" id="navMessages">कुराकानी</span>
+      </button>
+
+      <button class="nav-item fab-post" onclick="openNewPostModal()">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      </button>
+
+      <button class="nav-item green-nav" onclick="switchTab('bluetooth', this)">
+        <svg viewBox="0 0 24 24"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
+        <span class="nav-label" id="navBluetooth">ब्लुटुथ</span>
+      </button>
+
+      <button class="nav-item" onclick="showCeoProfile()">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <span class="nav-label" id="navCeo">सिईओ</span>
+      </button>
+    </nav>
+
+    <!-- CEO PROFILE FULLSCREEN OVERLAY -->
+    <div class="view-overlay" id="ceoProfileOverlay">
+      <div class="cover-header">
+        <button class="cover-back-btn" onclick="hideCeoProfile()">✕</button>
+        <img src="/cover.jpg" alt="Cover">
+      </div>
+      <div class="profile-body">
+        <div class="profile-avatar-row">
+          <img src="/ceo.jpg" class="profile-avatar-large" alt="CEO Bir Pujara">
+          <div class="profile-actions-row">
+            <button class="btn-profile-follow" onclick="showToast('सिईओ वीर पुजारालाई फलो गरियो!')">Follow</button>
+            <button class="btn-profile-msg" onclick="openChatWithCeo()">Message CEO</button>
+          </div>
+        </div>
+
+        <h3 style="font-size: 1.3rem; display: flex; align-items: center; gap: 6px;">
+          <span>वीर पुजारा (Bir Pujara)</span>
+          <span class="verified-tick" style="width: 18px; height: 18px; font-size: 11px;">✓</span>
+          <span class="ceo-badge-tag">CEO</span>
+        </h3>
+        <p style="color: var(--primary); font-weight: 600; font-size: 0.85rem;">संस्थापक तथा सिईओ, भकारी (Founder & CEO)</p>
+        <p style="color: var(--text-muted); font-size: 0.75rem;">@birpujara_ceo • काठमाडौं, नेपाल</p>
+
+        <div class="ceo-verify-badge-card">
+          <div class="verified-tick" style="width: 28px; height: 28px; font-size: 16px;">✓</div>
+          <div>
+            <div style="color: var(--green); font-weight: 800; font-size: 0.85rem;">प्रमाणित सिईओ खाता (Green Verified Badge)</div>
+            <div style="color: var(--text-muted); font-size: 0.72rem;">यो भकारीका संस्थापक तथा सिईओ वीर पुजाराको आधिकारिक खाता हो।</div>
+          </div>
+        </div>
+
+        <p style="font-size: 0.88rem; line-height: 1.5; margin: 12px 0;">
+          नेपालको आफ्नै मौलिक सामाजिक सञ्जाल भकारी निर्माण गर्दै। स्थानीय सिर्जना, मौलिक कथा र डिजिटल प्रविधिलाई सशक्त बनाउँदै। मेचीदेखि महाकालीसम्म र विश्वभर छरिएका नेपालीहरूलाई जोड्दै! 🇳🇵🌾
+        </p>
+
+        <div style="display: flex; justify-content: space-around; background: var(--surface-variant); padding: 14px; border-radius: 14px; margin-top: 14px;">
+          <div style="text-align: center;"><b style="font-size: 1.1rem;">48</b><div style="font-size: 0.7rem; color: var(--text-muted);">Posts</div></div>
+          <div style="text-align: center;"><b style="font-size: 1.1rem;">128.4K</b><div style="font-size: 0.7rem; color: var(--text-muted);">Followers</div></div>
+          <div style="text-align: center;"><b style="font-size: 1.1rem;">120</b><div style="font-size: 0.7rem; color: var(--text-muted);">Following</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLUETOOTH NEARBY OVERLAY -->
+    <div class="view-overlay" id="bluetoothOverlay">
+      <div style="padding: 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border);">
+        <button class="cover-back-btn" style="position: static;" onclick="hideBluetoothView()">←</button>
+        <div>
+          <h4 style="font-weight: 800;">नजिकै ब्लुटुथ साझेदारी (Bluetooth Nearby)</h4>
+          <span style="font-size: 0.75rem; color: var(--green);">अफलाइन डिभाइस-टु-डिभाइस सेयरिङ</span>
+        </div>
+      </div>
+
+      <div class="radar-box">
+        <div class="radar-circle">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="#10B981"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>
+        </div>
+        <h4 style="color: var(--green); margin-bottom: 4px;">ब्लुटुथ राडार सक्रिय छ</h4>
+        <p style="font-size: 0.75rem; color: var(--text-muted);">वरपरका भकारी प्रयोगकर्ताहरू पत्ता लाग्दैछन्...</p>
+      </div>
+
+      <div style="padding: 0 14px 10px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">भेटिएका प्रयोगकर्ताहरू (Nearby Peers):</div>
+
+      <div class="peer-card">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <img src="/ceo.jpg" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--green);">
+          <div>
+            <div style="font-weight: 700; font-size: 0.85rem;">Bir Pujara's Flagship (CEO) <span class="verified-tick">✓</span></div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">-42 dBm (Very Strong)</div>
+          </div>
+        </div>
+        <button class="btn-install-green" style="padding: 5px 12px; font-size: 0.75rem;" onclick="simulateBtSend('Bir Pujara')">सेयर गर्नुहोस्</button>
+      </div>
+
+      <div class="peer-card">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <img src="/cover.jpg" style="width: 40px; height: 40px; border-radius: 50%;">
+          <div>
+            <div style="font-weight: 700; font-size: 0.85rem;">Aarav's Pixel 9 Pro</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">-58 dBm (Strong)</div>
+          </div>
+        </div>
+        <button class="btn-install-green" style="padding: 5px 12px; font-size: 0.75rem;" onclick="simulateBtSend('Aarav')">सेयर गर्नुहोस्</button>
+      </div>
+    </div>
+
+    <!-- INSTALL INSTRUCTIONS MODAL (Fallback for browsers needing manual step) -->
+    <div class="modal-overlay" id="installModalOverlay">
+      <div class="modal-sheet">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <img src="/icons/icon-192.png" style="width: 64px; height: 64px; border-radius: 16px; border: 2px solid var(--green); margin-bottom: 8px;">
+          <h3 style="font-weight: 800;">Install Bhakari PWA</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">गुगल क्रोम (Google Chrome) बाट सिधै होम स्क्रिनमा राख्नुहोस्</p>
+        </div>
+
+        <div style="background: var(--surface-variant); padding: 14px; border-radius: 14px; margin-bottom: 16px; font-size: 0.85rem; line-height: 1.6;">
+          <b>क्रोममा इन्स्टल गर्ने तरिका:</b><br>
+          १. माथि दायाँ कुनाको तीन थोप्ला <b>(⋮)</b> थिच्नुहोस्।<br>
+          २. <b>"Install app"</b> वा <b>"Add to Home screen"</b> छान्नुहोस्।<br>
+          ३. <b>Install</b> थिच्नुहोस् र फुल-स्क्रिन एप अनुभव लिनुहोस्!
+        </div>
+
+        <button class="btn-install-green" style="width: 100%; justify-content: center; padding: 12px; font-size: 0.9rem;" onclick="triggerBrowserInstallPrompt()">
+          <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+          Install Bhakari Now
+        </button>
+        <button style="width: 100%; background: none; border: none; color: var(--text-muted); padding: 12px; margin-top: 6px; cursor: pointer;" onclick="closeInstallModal()">बन्द गर्नुहोस् (Close)</button>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toastBox">भकारीमा स्वागत छ!</div>
+
+  </div>
+
+  <script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Bhakari Service Worker Registered:', reg.scope))
+          .catch(err => console.error('Service Worker registration error:', err));
+      });
+    }
+
+    // PWA Install Prompt Capture
+    let deferredPrompt = null;
+    const topInstallBtn = document.getElementById('topInstallBtn');
+    const mainInstallBtn = document.getElementById('mainInstallBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      deferredPrompt = e;
+      console.log('beforeinstallprompt fired! deferredPrompt captured.');
+      showToast('Install Bhakari available on Android Chrome! 📱✨');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      console.log('Bhakari PWA was successfully installed.');
+      showToast('भकारी सफलतापूर्वक इन्स्टल भयो! (Installed to Home Screen) 🎉');
+      deferredPrompt = null;
+      const banner = document.getElementById('pwaHomeBanner');
+      if (banner) banner.style.display = 'none';
+    });
+
+    // When user clicks the GREEN Install App button
+    async function triggerBrowserInstallPrompt() {
+      if (deferredPrompt) {
+        // Show the browser install prompt
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to install prompt: ${outcome}`);
+        if (outcome === 'accepted') {
+          showToast('भकारी इन्स्टल गरिँदैछ... (Installing Bhakari)');
+        }
+        deferredPrompt = null;
+      } else {
+        // Fallback for when already installed or in Chrome desktop/mobile browser
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+          showToast('भकारी पहिले नै तपाईंको डिभाइसमा इन्स्टल छ! (Already installed)');
+        } else {
+          document.getElementById('installModalOverlay').classList.add('active');
+        }
+      }
+    }
+
+    function closeInstallModal() {
+      document.getElementById('installModalOverlay').classList.remove('active');
+    }
+
+    // Language Toggle
+    let currentLang = 'ne';
+    function toggleLanguage() {
+      currentLang = (currentLang === 'ne') ? 'en' : 'ne';
+      const isNe = (currentLang === 'ne');
+
+      document.getElementById('langSwitchBtn').textContent = isNe ? '🇬🇧 English' : '🇳🇵 नेपाली';
+      document.getElementById('brandTagline').textContent = isNe ? 'विश्वभरका नेपालीहरूको सञ्जाल' : 'Connecting Nepalis Worldwide';
+      document.getElementById('bannerTitle').textContent = isNe ? 'भकारी एप इन्स्टल गर्नुहोस्' : 'Install Bhakari App';
+      document.getElementById('bannerSub').textContent = isNe ? 'Android Chrome मा १-ट्यापमा इन्स्टल हुने PWA' : 'Install directly in Android Chrome as a PWA';
+      document.getElementById('bannerBtnText').textContent = isNe ? 'एप इन्स्टल' : 'Install App';
+      document.getElementById('topInstallBtnText').textContent = isNe ? 'इन्स्टल' : 'Install App';
+      document.getElementById('storiesHeading').textContent = isNe ? 'कथा र क्षणहरू (Stories)' : 'Stories & Moments';
+      document.getElementById('navHome').textContent = isNe ? 'गृहपृष्ठ' : 'Home';
+      document.getElementById('navMessages').textContent = isNe ? 'कुराकानी' : 'Messages';
+      document.getElementById('navBluetooth').textContent = isNe ? 'ब्लुटुथ' : 'Nearby';
+      document.getElementById('navCeo').textContent = isNe ? 'सिईओ' : 'CEO';
+
+      showToast(isNe ? 'भाषा नेपालीमा परिवर्तन भयो' : 'Language switched to English');
+    }
+
+    // Likes & Interactions
+    function toggleLike(btn, baseCount) {
+      const isLiked = btn.classList.toggle('liked');
+      const countSpan = btn.querySelector('.count');
+      const newCount = isLiked ? baseCount + 1 : baseCount;
+      countSpan.textContent = newCount.toLocaleString();
+      showToast(isLiked ? 'मन पर्यो! (Liked)' : 'Unlike');
+    }
+
+    // Toast
+    function showToast(msg) {
+      const toast = document.getElementById('toastBox');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    // Overlays
+    function showCeoProfile() {
+      document.getElementById('ceoProfileOverlay').classList.add('active');
+    }
+    function hideCeoProfile() {
+      document.getElementById('ceoProfileOverlay').classList.remove('active');
+    }
+    function showBluetoothView() {
+      document.getElementById('bluetoothOverlay').classList.add('active');
+    }
+    function hideBluetoothView() {
+      document.getElementById('bluetoothOverlay').classList.remove('active');
+    }
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+      if (tab === 'bluetooth') showBluetoothView();
+      if (tab === 'feed') { hideBluetoothView(); hideCeoProfile(); }
+      if (tab === 'messages') {
+        showToast('कुराकानी: सिईओ वीर पुजारा प्रत्यक्ष लाइन (CEO Chat active)');
+      }
+    }
+
+    function simulateBtSend(target) {
+      showToast(`${target} लाई ब्लुटुथ मार्फत पोस्ट पठाइयो! 📡✅`);
+    }
+
+    function openChatWithCeo() {
+      hideCeoProfile();
+      showToast('सिईओ वीर पुजारासँग कुराकानी सुरु भयो: "नमस्ते साथी! भकारीमा स्वागत छ।"');
+    }
+
+    function openNewPostModal() {
+      showToast('नयाँ पोस्ट: फोटो, भिडियो वा शब्दहरू भकारीमा बाँड्नुहोस्!');
+    }
+    function openCommentsModal() {
+      showToast('प्रतिक्रियाहरू: राम्रो पहल, सिईओ साब! 🇳🇵✨');
+    }
+    function openShareModal() {
+      showToast('साझेदारी: लिङ्क प्रतिलिपि गरियो (Link copied)');
+    }
+    function openBluetoothShare(postId) {
+      showBluetoothView();
+      showToast('ब्लुटुथ राडार खोल्दै...');
+    }
+
+    function setFilter(chip, cat) {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      document.querySelectorAll('.post-card').forEach(card => {
+        if (cat === 'all' || card.dataset.category === cat) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

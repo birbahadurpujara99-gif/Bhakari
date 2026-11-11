@@ -26,12 +26,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -42,7 +44,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -77,13 +78,14 @@ import com.example.data.LanguageStrings
 import com.example.ui.components.VerifiedBadge
 import com.example.ui.theme.BhakariCrimson
 import com.example.ui.theme.BhakariGold
-import com.example.ui.theme.BhakariGoldDark
+import com.example.ui.theme.FacebookVerifiedBlue
 import com.example.ui.theme.VerifiedGreen
 
 @Composable
 fun AuthScreen(
   currentLanguage: AppLanguage,
   onToggleLanguage: () -> Unit,
+  onLoginGoogle: () -> Unit,
   onLoginPhone: (String, String) -> Unit,
   onLoginEmail: (String, String) -> Unit,
   onSignupEmail: (String, String, String) -> Unit,
@@ -93,17 +95,24 @@ fun AuthScreen(
 ) {
   val context = LocalContext.current
   val isNepali = currentLanguage == AppLanguage.NEPALI
+  val isHindi = currentLanguage == AppLanguage.HINDI
   var selectedTab by remember { mutableIntStateOf(0) } // 0: Phone, 1: Email, 2: Signup
 
   // Form Fields
   var phoneNumber by remember { mutableStateOf("9841234567") }
-  var phoneOtp by remember { mutableStateOf("1234") }
-  var emailAddress by remember { mutableStateOf("suman.thapa@bhakari.np") }
-  var emailPassword by remember { mutableStateOf("bhakari123") }
-  var signupFullName by remember { mutableStateOf("Sunita Karki") }
-  var signupEmail by remember { mutableStateOf("sunita@bhakari.np") }
-  var signupPassword by remember { mutableStateOf("securePass123") }
+  var phoneOtp by remember { mutableStateOf("") }
+  var otpSent by remember { mutableStateOf(false) }
+  
+  var emailAddress by remember { mutableStateOf("birbahadurpujara99@gmail.com") }
+  var emailPassword by remember { mutableStateOf("Pujara@123") }
   var isPasswordVisible by remember { mutableStateOf(false) }
+  
+  var signupFullName by remember { mutableStateOf("Suman Thapa") }
+  var signupEmail by remember { mutableStateOf("suman.thapa@bhakari.np") }
+  var signupPassword by remember { mutableStateOf("bhakariPass123") }
+  
+  var showForgotPasswordDialog by remember { mutableStateOf(false) }
+  var forgotPasswordEmail by remember { mutableStateOf("") }
 
   Surface(
     modifier = modifier.fillMaxSize(),
@@ -118,175 +127,168 @@ fun AuthScreen(
         .padding(horizontal = 20.dp, vertical = 12.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      // Top bar with Language Switcher
+      // Top Language Switcher Bar
       Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = Arrangement.End
       ) {
-        Box(
-          modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(BhakariGold.copy(alpha = 0.15f))
-            .border(1.dp, BhakariGold, RoundedCornerShape(20.dp))
-            .clickable { onToggleLanguage() }
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-            .testTag("auth_language_switch_button"),
-          contentAlignment = Alignment.Center
+        OutlinedButton(
+          onClick = onToggleLanguage,
+          shape = RoundedCornerShape(20.dp),
+          contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+          modifier = Modifier.testTag("auth_language_switch_button")
         ) {
+          Icon(Icons.Default.Language, contentDescription = null, modifier = Modifier.size(16.dp))
+          Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = if (isNepali) "🇳🇵 नेपाली (Switch to EN)" else "🇬🇧 English (नेपालीमा हेर्नुहोस्)",
-            style = MaterialTheme.typography.labelSmall.copy(
-              fontWeight = FontWeight.Bold,
-              color = MaterialTheme.colorScheme.onSurface
-            )
+            text = "${currentLanguage.flag} ${currentLanguage.displayName}",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
           )
         }
       }
 
       Spacer(modifier = Modifier.height(10.dp))
 
-      // Bhakari Brand Logo & Title
+      // Bhakari Logo with letter B
       Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
           .size(86.dp)
-          .clip(RoundedCornerShape(22.dp))
-          .border(2.5.dp, BhakariGold, RoundedCornerShape(22.dp))
-      ) {
-        Image(
-          painter = painterResource(id = R.drawable.bhakari_logo),
-          contentDescription = "Bhakari Logo",
-          modifier = Modifier.size(80.dp)
-        )
-      }
-
-      Spacer(modifier = Modifier.height(12.dp))
-
-      Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-          text = "Bhakari",
-          style = MaterialTheme.typography.headlineMedium.copy(
-            fontWeight = FontWeight.ExtraBold,
-            color = BhakariGold
-          )
-        )
-        Text(
-          text = " | भकारी",
-          style = MaterialTheme.typography.headlineMedium.copy(
-            fontWeight = FontWeight.Bold,
-            color = BhakariCrimson
-          )
-        )
-      }
-
-      Text(
-        text = LanguageStrings.get("login_subtitle", currentLanguage),
-        style = MaterialTheme.typography.bodyMedium.copy(
-          color = MaterialTheme.colorScheme.onSurfaceVariant
-        ),
-        textAlign = TextAlign.Center
-      )
-
-      Spacer(modifier = Modifier.height(20.dp))
-
-      // Tab selector: Phone Number / Email Account / Sign Up
-      Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-          containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        TabRow(
-          selectedTabIndex = selectedTab,
-          containerColor = Color.Transparent,
-          contentColor = BhakariGold,
-          indicator = { tabPositions ->
-            TabRowDefaults.SecondaryIndicator(
-              Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-              color = BhakariGold,
-              height = 3.dp
+          .clip(CircleShape)
+          .background(
+            Brush.linearGradient(
+              listOf(BhakariGold, BhakariCrimson, FacebookVerifiedBlue)
             )
-          }
+          )
+          .padding(3.dp)
+      ) {
+        Box(
+          contentAlignment = Alignment.Center,
+          modifier = Modifier
+            .fillMaxSize()
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surface)
         ) {
-          Tab(
-            selected = selectedTab == 0,
-            onClick = { selectedTab = 0 },
-            text = {
-              Text(
-                text = LanguageStrings.get("tab_phone", currentLanguage),
-                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal,
-                fontSize = 12.sp
-              )
-            },
-            icon = {
-              Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(18.dp))
-            },
-            modifier = Modifier.testTag("tab_phone_login")
-          )
-          Tab(
-            selected = selectedTab == 1,
-            onClick = { selectedTab = 1 },
-            text = {
-              Text(
-                text = LanguageStrings.get("tab_email", currentLanguage),
-                fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal,
-                fontSize = 12.sp
-              )
-            },
-            icon = {
-              Icon(Icons.Default.Email, contentDescription = null, modifier = Modifier.size(18.dp))
-            },
-            modifier = Modifier.testTag("tab_email_login")
-          )
-          Tab(
-            selected = selectedTab == 2,
-            onClick = { selectedTab = 2 },
-            text = {
-              Text(
-                text = LanguageStrings.get("tab_signup", currentLanguage),
-                fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal,
-                fontSize = 12.sp
-              )
-            },
-            icon = {
-              Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(18.dp))
-            },
-            modifier = Modifier.testTag("tab_signup")
+          Image(
+            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            contentDescription = "Bhakari Logo",
+            modifier = Modifier.size(72.dp)
           )
         }
       }
 
+      Spacer(modifier = Modifier.height(10.dp))
+
+      Text(
+        text = LanguageStrings.get("app_name", currentLanguage),
+        style = MaterialTheme.typography.headlineMedium.copy(
+          fontWeight = FontWeight.ExtraBold,
+          color = MaterialTheme.colorScheme.onSurface,
+          letterSpacing = 1.sp
+        )
+      )
+
+      Text(
+        text = LanguageStrings.get("app_tagline", currentLanguage),
+        style = MaterialTheme.typography.bodySmall.copy(
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          fontWeight = FontWeight.Medium
+        )
+      )
+
+      Spacer(modifier = Modifier.height(20.dp))
+
+      // Google Sign-In Primary Button
+      Button(
+        onClick = onLoginGoogle,
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(52.dp)
+          .testTag("google_signin_button")
+      ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          // Google Colorful G Icon Placeholder
+          Box(
+            modifier = Modifier
+              .size(24.dp)
+              .clip(CircleShape)
+              .background(Color(0xFF4285F4)),
+            contentAlignment = Alignment.Center
+          ) {
+            Text("G", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+          }
+          Spacer(modifier = Modifier.width(12.dp))
+          Text(
+            text = LanguageStrings.get("login_google", currentLanguage),
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Bold,
+            fontSize = 15.sp
+          )
+        }
+      }
+
+      Spacer(modifier = Modifier.height(16.dp))
+
+      // Tabs: Phone / Email / Signup
+      TabRow(
+        selectedTabIndex = selectedTab,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        contentColor = FacebookVerifiedBlue,
+        modifier = Modifier
+          .clip(RoundedCornerShape(16.dp))
+          .padding(4.dp),
+        indicator = { tabPositions ->
+          if (selectedTab < tabPositions.size) {
+            TabRowDefaults.SecondaryIndicator(
+              modifier = Modifier
+                .tabIndicatorOffset(tabPositions[selectedTab])
+                .clip(RoundedCornerShape(12.dp)),
+              color = FacebookVerifiedBlue,
+              height = 3.dp
+            )
+          }
+        }
+      ) {
+        Tab(
+          selected = selectedTab == 0,
+          onClick = { selectedTab = 0 },
+          text = { Text(LanguageStrings.get("tab_phone", currentLanguage), fontWeight = FontWeight.SemiBold, fontSize = 13.sp) },
+          modifier = Modifier.testTag("tab_phone_login")
+        )
+        Tab(
+          selected = selectedTab == 1,
+          onClick = { selectedTab = 1 },
+          text = { Text(LanguageStrings.get("tab_email", currentLanguage), fontWeight = FontWeight.SemiBold, fontSize = 13.sp) },
+          modifier = Modifier.testTag("tab_email_login")
+        )
+        Tab(
+          selected = selectedTab == 2,
+          onClick = { selectedTab = 2 },
+          text = { Text(LanguageStrings.get("tab_signup", currentLanguage), fontWeight = FontWeight.SemiBold, fontSize = 13.sp) },
+          modifier = Modifier.testTag("tab_signup_register")
+        )
+      }
+
       Spacer(modifier = Modifier.height(18.dp))
 
-      // Tab 0: Phone Number Login
+      // Tab 0: Phone Number with OTP verification
       AnimatedVisibility(visible = selectedTab == 0) {
         Column(
           modifier = Modifier.fillMaxWidth(),
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
-          Text(
-            text = LanguageStrings.get("phone_login_desc", currentLanguage),
-            style = MaterialTheme.typography.bodySmall.copy(
-              color = MaterialTheme.colorScheme.onSurfaceVariant
-            ),
-            modifier = Modifier.padding(bottom = 12.dp)
-          )
-
           OutlinedTextField(
             value = phoneNumber,
             onValueChange = { phoneNumber = it },
             label = { Text(LanguageStrings.get("phone_label", currentLanguage)) },
             placeholder = { Text("+977 98XXXXXXXX") },
             leadingIcon = {
-              Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 10.dp, end = 6.dp)
-              ) {
-                Text(text = "🇳🇵 +977", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-              }
+              Icon(Icons.Default.Phone, contentDescription = null, tint = FacebookVerifiedBlue)
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             shape = RoundedCornerShape(14.dp),
@@ -296,72 +298,89 @@ fun AuthScreen(
             singleLine = true
           )
 
-          Spacer(modifier = Modifier.height(12.dp))
+          Spacer(modifier = Modifier.height(10.dp))
 
-          OutlinedTextField(
-            value = phoneOtp,
-            onValueChange = { phoneOtp = it },
-            label = { Text(if (isNepali) "ओटीपी कोड (OTP)" else "Verification Code (OTP)") },
-            placeholder = { Text("1234") },
-            leadingIcon = {
-              Icon(Icons.Default.Lock, contentDescription = null, tint = BhakariGold)
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier
-              .fillMaxWidth()
-              .testTag("otp_input_field"),
-            singleLine = true
-          )
-
-          Spacer(modifier = Modifier.height(18.dp))
-
-          Button(
-            onClick = {
-              if (phoneNumber.isNotBlank()) {
-                onLoginPhone(phoneNumber, phoneOtp)
-              } else {
-                Toast.makeText(context, "Please enter phone number", Toast.LENGTH_SHORT).show()
-              }
-            },
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BhakariGold),
-            modifier = Modifier
-              .fillMaxWidth()
-              .height(50.dp)
-              .testTag("phone_login_submit_button")
-          ) {
-            Text(
-              text = LanguageStrings.get("login_btn", currentLanguage),
-              fontWeight = FontWeight.Bold,
-              color = Color.Black,
-              fontSize = 15.sp
+          if (!otpSent) {
+            Button(
+              onClick = {
+                if (phoneNumber.isNotBlank()) {
+                  otpSent = true
+                  phoneOtp = "554422" // Demo verification code generated
+                  Toast.makeText(context, "Verification OTP code sent to $phoneNumber!", Toast.LENGTH_LONG).show()
+                } else {
+                  Toast.makeText(context, "Please enter phone number", Toast.LENGTH_SHORT).show()
+                }
+              },
+              shape = RoundedCornerShape(14.dp),
+              colors = ButtonDefaults.buttonColors(containerColor = FacebookVerifiedBlue),
+              modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .testTag("send_otp_button")
+            ) {
+              Text(
+                text = LanguageStrings.get("send_otp", currentLanguage),
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+              )
+            }
+          } else {
+            OutlinedTextField(
+              value = phoneOtp,
+              onValueChange = { phoneOtp = it },
+              label = { Text(LanguageStrings.get("otp_label", currentLanguage)) },
+              placeholder = { Text("6-digit code") },
+              leadingIcon = {
+                Icon(Icons.Default.Lock, contentDescription = null, tint = FacebookVerifiedBlue)
+              },
+              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+              shape = RoundedCornerShape(14.dp),
+              modifier = Modifier
+                .fillMaxWidth()
+                .testTag("otp_input_field"),
+              singleLine = true
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+              onClick = {
+                if (phoneOtp.isNotBlank()) {
+                  onLoginPhone(phoneNumber, phoneOtp)
+                } else {
+                  Toast.makeText(context, "Please enter verification OTP", Toast.LENGTH_SHORT).show()
+                }
+              },
+              shape = RoundedCornerShape(14.dp),
+              colors = ButtonDefaults.buttonColors(containerColor = FacebookVerifiedBlue),
+              modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .testTag("verify_otp_button")
+            ) {
+              Text(
+                text = LanguageStrings.get("verify_otp", currentLanguage),
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+              )
+            }
           }
         }
       }
 
-      // Tab 1: Email Account Login
+      // Tab 1: Email & Password Login
       AnimatedVisibility(visible = selectedTab == 1) {
         Column(
           modifier = Modifier.fillMaxWidth(),
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
-          Text(
-            text = LanguageStrings.get("email_login_desc", currentLanguage),
-            style = MaterialTheme.typography.bodySmall.copy(
-              color = MaterialTheme.colorScheme.onSurfaceVariant
-            ),
-            modifier = Modifier.padding(bottom = 12.dp)
-          )
-
           OutlinedTextField(
             value = emailAddress,
             onValueChange = { emailAddress = it },
             label = { Text(LanguageStrings.get("email_label", currentLanguage)) },
             placeholder = { Text("name@example.com") },
             leadingIcon = {
-              Icon(Icons.Default.Email, contentDescription = null, tint = BhakariGold)
+              Icon(Icons.Default.Email, contentDescription = null, tint = FacebookVerifiedBlue)
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             shape = RoundedCornerShape(14.dp),
@@ -371,14 +390,14 @@ fun AuthScreen(
             singleLine = true
           )
 
-          Spacer(modifier = Modifier.height(12.dp))
+          Spacer(modifier = Modifier.height(10.dp))
 
           OutlinedTextField(
             value = emailPassword,
             onValueChange = { emailPassword = it },
             label = { Text(LanguageStrings.get("password_label", currentLanguage)) },
             leadingIcon = {
-              Icon(Icons.Default.Lock, contentDescription = null, tint = BhakariGold)
+              Icon(Icons.Default.Lock, contentDescription = null, tint = FacebookVerifiedBlue)
             },
             trailingIcon = {
               IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
@@ -397,18 +416,41 @@ fun AuthScreen(
             singleLine = true
           )
 
-          Spacer(modifier = Modifier.height(18.dp))
+          // Forgot Password Row
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(top = 4.dp),
+            horizontalArrangement = Arrangement.End
+          ) {
+            TextButton(
+              onClick = {
+                forgotPasswordEmail = emailAddress
+                showForgotPasswordDialog = true
+              },
+              modifier = Modifier.testTag("forgot_password_btn")
+            ) {
+              Text(
+                text = LanguageStrings.get("forgot_password", currentLanguage),
+                color = FacebookVerifiedBlue,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold
+              )
+            }
+          }
+
+          Spacer(modifier = Modifier.height(8.dp))
 
           Button(
             onClick = {
-              if (emailAddress.isNotBlank()) {
+              if (emailAddress.isNotBlank() && emailPassword.isNotBlank()) {
                 onLoginEmail(emailAddress, emailPassword)
               } else {
-                Toast.makeText(context, "Please enter email", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Please enter email and password", Toast.LENGTH_SHORT).show()
               }
             },
             shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BhakariGold),
+            colors = ButtonDefaults.buttonColors(containerColor = FacebookVerifiedBlue),
             modifier = Modifier
               .fillMaxWidth()
               .height(50.dp)
@@ -417,34 +459,26 @@ fun AuthScreen(
             Text(
               text = LanguageStrings.get("login_btn", currentLanguage),
               fontWeight = FontWeight.Bold,
-              color = Color.Black,
+              color = Color.White,
               fontSize = 15.sp
             )
           }
         }
       }
 
-      // Tab 2: Signup with Email
+      // Tab 2: Create Account / Signup
       AnimatedVisibility(visible = selectedTab == 2) {
         Column(
           modifier = Modifier.fillMaxWidth(),
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
-          Text(
-            text = LanguageStrings.get("signup_desc", currentLanguage),
-            style = MaterialTheme.typography.bodySmall.copy(
-              color = MaterialTheme.colorScheme.onSurfaceVariant
-            ),
-            modifier = Modifier.padding(bottom = 12.dp)
-          )
-
           OutlinedTextField(
             value = signupFullName,
             onValueChange = { signupFullName = it },
             label = { Text(LanguageStrings.get("fullname_label", currentLanguage)) },
-            placeholder = { Text("Sunita Karki") },
+            placeholder = { Text("Suman Thapa") },
             leadingIcon = {
-              Icon(Icons.Default.Person, contentDescription = null, tint = BhakariCrimson)
+              Icon(Icons.Default.Person, contentDescription = null, tint = FacebookVerifiedBlue)
             },
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier
@@ -453,15 +487,15 @@ fun AuthScreen(
             singleLine = true
           )
 
-          Spacer(modifier = Modifier.height(12.dp))
+          Spacer(modifier = Modifier.height(10.dp))
 
           OutlinedTextField(
             value = signupEmail,
             onValueChange = { signupEmail = it },
             label = { Text(LanguageStrings.get("email_label", currentLanguage)) },
-            placeholder = { Text("sunita@example.com") },
+            placeholder = { Text("suman@bhakari.np") },
             leadingIcon = {
-              Icon(Icons.Default.Email, contentDescription = null, tint = BhakariCrimson)
+              Icon(Icons.Default.Email, contentDescription = null, tint = FacebookVerifiedBlue)
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             shape = RoundedCornerShape(14.dp),
@@ -471,14 +505,14 @@ fun AuthScreen(
             singleLine = true
           )
 
-          Spacer(modifier = Modifier.height(12.dp))
+          Spacer(modifier = Modifier.height(10.dp))
 
           OutlinedTextField(
             value = signupPassword,
             onValueChange = { signupPassword = it },
             label = { Text(LanguageStrings.get("password_label", currentLanguage)) },
             leadingIcon = {
-              Icon(Icons.Default.Lock, contentDescription = null, tint = BhakariCrimson)
+              Icon(Icons.Default.Lock, contentDescription = null, tint = FacebookVerifiedBlue)
             },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -489,14 +523,14 @@ fun AuthScreen(
             singleLine = true
           )
 
-          Spacer(modifier = Modifier.height(18.dp))
+          Spacer(modifier = Modifier.height(16.dp))
 
           Button(
             onClick = {
-              if (signupEmail.isNotBlank()) {
+              if (signupEmail.isNotBlank() && signupPassword.isNotBlank()) {
                 onSignupEmail(signupFullName, signupEmail, signupPassword)
               } else {
-                Toast.makeText(context, "Please enter all fields", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Please enter all required fields", Toast.LENGTH_SHORT).show()
               }
             },
             shape = RoundedCornerShape(14.dp),
@@ -516,32 +550,17 @@ fun AuthScreen(
         }
       }
 
-      Spacer(modifier = Modifier.height(16.dp))
+      Spacer(modifier = Modifier.height(18.dp))
 
-      // Divider
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        HorizontalDivider(modifier = Modifier.weight(1f))
-        Text(
-          text = " ${LanguageStrings.get("or_divider", currentLanguage)} ",
-          style = MaterialTheme.typography.labelSmall.copy(
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-          )
-        )
-        HorizontalDivider(modifier = Modifier.weight(1f))
-      }
-
-      Spacer(modifier = Modifier.height(16.dp))
-
-      // Direct CEO Login Shortcut (Prominently requested: CEO Bir Pujara)
+      // Direct CEO Bir Pujara One-Tap Access
       Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-          containerColor = VerifiedGreen.copy(alpha = 0.1f)
+          containerColor = FacebookVerifiedBlue.copy(alpha = 0.09f)
         ),
-        border = CardDefaults.outlinedCardBorder().copy(brush = Brush.horizontalGradient(listOf(VerifiedGreen, BhakariGold))),
+        border = CardDefaults.outlinedCardBorder().copy(
+          brush = Brush.horizontalGradient(listOf(FacebookVerifiedBlue, BhakariGold))
+        ),
         modifier = Modifier
           .fillMaxWidth()
           .clickable { onLoginAsCeo() }
@@ -555,14 +574,14 @@ fun AuthScreen(
         ) {
           Box(
             modifier = Modifier
-              .size(44.dp)
+              .size(46.dp)
               .clip(CircleShape)
-              .border(2.dp, VerifiedGreen, CircleShape)
+              .border(2.dp, FacebookVerifiedBlue, CircleShape)
           ) {
             Image(
               painter = painterResource(id = R.drawable.ceo_bir_pujara),
               contentDescription = "CEO Bir Pujara",
-              modifier = Modifier.size(44.dp)
+              modifier = Modifier.size(46.dp)
             )
           }
 
@@ -571,19 +590,19 @@ fun AuthScreen(
           Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
               Text(
-                text = if (isNepali) "सिईओ वीर पुजाराको रूपमा लगइन" else "Sign In as CEO Bir Pujara",
+                text = "Bir Pujara (CEO)",
                 style = MaterialTheme.typography.titleSmall.copy(
                   fontWeight = FontWeight.Bold,
                   color = MaterialTheme.colorScheme.onSurface
                 )
               )
               Spacer(modifier = Modifier.width(4.dp))
-              VerifiedBadge(size = 14.dp)
+              VerifiedBadge(size = 15.dp, isCeo = true)
             }
             Text(
-              text = if (isNepali) "आधिकारिक सिईओ प्रोफाइल र पोस्ट पहुँच" else "Official CEO Verified Account Access",
+              text = if (isNepali) "आधिकारिक सिईओ लगइन र प्रशासनिक ड्यासबोर्ड" else "Official CEO Account with Full Administrative Control",
               style = MaterialTheme.typography.bodySmall.copy(
-                color = VerifiedGreen,
+                color = FacebookVerifiedBlue,
                 fontWeight = FontWeight.Medium,
                 fontSize = 11.sp
               )
@@ -592,7 +611,7 @@ fun AuthScreen(
         }
       }
 
-      Spacer(modifier = Modifier.height(10.dp))
+      Spacer(modifier = Modifier.height(12.dp))
 
       // Continue as Guest Button
       OutlinedButton(
@@ -613,5 +632,46 @@ fun AuthScreen(
 
       Spacer(modifier = Modifier.height(20.dp))
     }
+  }
+
+  // Forgot Password Dialog
+  if (showForgotPasswordDialog) {
+    AlertDialog(
+      onDismissRequest = { showForgotPasswordDialog = false },
+      title = { Text(LanguageStrings.get("forgot_password", currentLanguage), fontWeight = FontWeight.Bold) },
+      text = {
+        Column {
+          Text(
+            if (isNepali) "पासवर्ड रिसेट लिङ्क प्राप्त गर्न आफ्नो दर्ता गरिएको इमेल ठेगाना लेख्नुहोस्:"
+            else "Enter your registered email address to receive password reset instructions:"
+          )
+          Spacer(modifier = Modifier.height(10.dp))
+          OutlinedTextField(
+            value = forgotPasswordEmail,
+            onValueChange = { forgotPasswordEmail = it },
+            label = { Text(LanguageStrings.get("email_label", currentLanguage)) },
+            shape = RoundedCornerShape(12.dp),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+          )
+        }
+      },
+      confirmButton = {
+        Button(
+          onClick = {
+            showForgotPasswordDialog = false
+            Toast.makeText(context, "Password reset instructions sent to $forgotPasswordEmail!", Toast.LENGTH_LONG).show()
+          },
+          colors = ButtonDefaults.buttonColors(containerColor = FacebookVerifiedBlue)
+        ) {
+          Text(LanguageStrings.get("reset_password", currentLanguage))
+        }
+      },
+      dismissButton = {
+        TextButton(onClick = { showForgotPasswordDialog = false }) {
+          Text(LanguageStrings.get("cancel", currentLanguage))
+        }
+      }
+    )
   }
 }

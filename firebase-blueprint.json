@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "UserProfile": {
+      "collection": "users",
+      "fields": {
+        "id": { "type": "string", "description": "User UID matching auth.uid" },
+        "name": { "type": "string", "description": "Full display name" },
+        "nepaliName": { "type": "string", "description": "Display name in Nepali" },
+        "username": { "type": "string", "description": "Unique handle" },
+        "email": { "type": "string", "description": "Email address" },
+        "phone": { "type": "string", "description": "Phone number" },
+        "title": { "type": "string", "description": "Professional or community title" },
+        "nepaliTitle": { "type": "string", "description": "Title in Nepali" },
+        "bio": { "type": "string", "description": "User biography" },
+        "nepaliBio": { "type": "string", "description": "Biography in Nepali" },
+        "avatarUrl": { "type": "string", "description": "Profile picture URL or base64" },
+        "coverUrl": { "type": "string", "description": "Cover photo URL or base64" },
+        "avatarColorHex": { "type": "number", "description": "Fallback avatar background color" },
+        "isVerified": { "type": "boolean", "description": "Verified status" },
+        "isBlueVerified": { "type": "boolean", "description": "Facebook-style blue checkmark status" },
+        "isCeo": { "type": "boolean", "description": "CEO status for Bir Pujara" },
+        "role": { "type": "string", "description": "ceo, moderator, or user" },
+        "isBlocked": { "type": "boolean", "description": "Blocked by admin status" },
+        "isSuspended": { "type": "boolean", "description": "Suspended account status" },
+        "followersCount": { "type": "number", "description": "Follower count" },
+        "followingCount": { "type": "number", "description": "Following count" },
+        "postsCount": { "type": "number", "description": "Post count" },
+        "createdAt": { "type": "timestamp", "description": "Creation timestamp" },
+        "updatedAt": { "type": "timestamp", "description": "Last update timestamp" }
+      }
+    },
+    "Post": {
+      "collection": "posts",
+      "fields": {
+        "userId": { "type": "string", "description": "Author UID" },
+        "authorName": { "type": "string", "description": "Author display name" },
+        "authorNepaliName": { "type": "string", "description": "Author Nepali name" },
+        "authorUsername": { "type": "string", "description": "Author handle" },
+        "authorAvatarUrl": { "type": "string", "description": "Author avatar URL" },
+        "authorAvatarColorHex": { "type": "number", "description": "Author avatar color" },
+        "authorIsBlueVerified": { "type": "boolean", "description": "Author blue badge flag" },
+        "authorIsCeo": { "type": "boolean", "description": "Author CEO flag" },
+        "content": { "type": "string", "description": "Post text in English/mixed" },
+        "nepaliContent": { "type": "string", "description": "Post text in Nepali" },
+        "mediaType": { "type": "string", "description": "PHOTO, VIDEO, or TEXT_ONLY" },
+        "imageUrl": { "type": "string", "description": "Photo URL" },
+        "videoUrl": { "type": "string", "description": "Video URL" },
+        "videoTitle": { "type": "string", "description": "Video caption" },
+        "tags": { "type": "array", "description": "Hashtags" },
+        "location": { "type": "string", "description": "Geo/City tag" },
+        "likesCount": { "type": "number", "description": "Likes counter" },
+        "commentsCount": { "type": "number", "description": "Comments counter" },
+        "sharesCount": { "type": "number", "description": "Shares counter" },
+        "isCeoAnnouncement": { "type": "boolean", "description": "CEO official announcement" },
+        "isReported": { "type": "boolean", "description": "Reported flag" },
+        "isRemoved": { "type": "boolean", "description": "Admin removed flag" },
+        "createdAt": { "type": "timestamp", "description": "Creation timestamp" },
+        "updatedAt": { "type": "timestamp", "description": "Last update timestamp" }
+      }
+    },
+    "VerificationRequest": {
+      "collection": "verification_requests",
+      "fields": {
+        "userId": { "type": "string", "description": "Applicant UID" },
+        "userName": { "type": "string", "description": "Applicant name" },
+        "username": { "type": "string", "description": "Applicant handle" },
+        "userAvatarColorHex": { "type": "number", "description": "Avatar color" },
+        "category": { "type": "string", "description": "Category of request" },
+        "nepaliCategory": { "type": "string", "description": "Nepali category" },
+        "documentType": { "type": "string", "description": "ID document presented" },
+        "reason": { "type": "string", "description": "Justification" },
+        "knownAs": { "type": "string", "description": "Public moniker" },
+        "websiteOrLink": { "type": "string", "description": "Public link" },
+        "status": { "type": "string", "description": "PENDING, APPROVED, or REJECTED" },
+        "submittedAt": { "type": "string", "description": "Human readable date" },
+        "reviewNote": { "type": "string", "description": "Admin review comments" },
+        "reviewedBy": { "type": "string", "description": "Admin identifier" },
+        "createdAt": { "type": "timestamp", "description": "Submission timestamp" },
+        "updatedAt": { "type": "timestamp", "description": "Review timestamp" }
+      }
+    },
+    "Report": {
+      "collection": "reports",
+      "fields": {
+        "reporterUserId": { "type": "string", "description": "Reporting user UID" },
+        "reporterName": { "type": "string", "description": "Reporting user name" },
+        "reportedType": { "type": "string", "description": "post, comment, user" },
+        "targetId": { "type": "string", "description": "Target resource ID" },
+        "reason": { "type": "string", "description": "Report reason" },
+        "status": { "type": "string", "description": "PENDING, RESOLVED, DISMISSED" },
+        "createdAt": { "type": "timestamp", "description": "Report timestamp" },
+        "updatedAt": { "type": "timestamp", "description": "Resolution timestamp" }
+      }
+    },
+    "Announcement": {
+      "collection": "announcements",
+      "fields": {
+        "title": { "type": "string", "description": "Announcement title" },
+        "nepaliTitle": { "type": "string", "description": "Nepali title" },
+        "message": { "type": "string", "description": "Announcement body" },
+        "nepaliMessage": { "type": "string", "description": "Nepali body" },
+        "authorId": { "type": "string", "description": "CEO author UID" },
+        "authorName": { "type": "string", "description": "CEO author name" },
+        "createdAt": { "type": "timestamp", "description": "Creation timestamp" }
+      }
+    },
+    "AdminLog": {
+      "collection": "admin_logs",
+      "fields": {
+        "adminId": { "type": "string", "description": "Admin UID" },
+        "adminName": { "type": "string", "description": "Admin name" },
+        "action": { "type": "string", "description": "Action performed" },
+        "details": { "type": "string", "description": "Action details" },
+        "timestamp": { "type": "timestamp", "description": "Log timestamp" }
+      }
+    }
+  }
+}

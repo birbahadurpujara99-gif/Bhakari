@@ -282,7 +282,7 @@ fun CeoProfileScreen(
               )
 
               // Prominent Green Verified Tick
-              VerifiedBadge(size = 22.dp, showLabel = true, labelText = "CEO • Verified")
+              VerifiedBadge(size = 22.dp, isCeo = true, showLabel = true, labelText = "CEO • Verified")
             }
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -361,7 +361,7 @@ fun CeoProfileScreen(
                 modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
               ) {
-                VerifiedBadge(size = 24.dp)
+                VerifiedBadge(size = 24.dp, isCeo = true)
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                   Text(

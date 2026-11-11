@@ -184,21 +184,36 @@ fun InstallPwaDialog(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Action Buttons
+        // Action Buttons: 1) Open in Android Chrome (Triggers Browser Prompt) 2) Add PWA Shortcut
         Button(
           onClick = {
+            try {
+              val pwaUri = android.net.Uri.parse("https://ais-dev-6tryqtllcmrxdap6uhyf64-836283227085.asia-northeast1.run.app")
+              val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, pwaUri).apply {
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                // Prefer Google Chrome if installed
+                setPackage("com.android.chrome")
+              }
+              try {
+                context.startActivity(intent)
+              } catch (e: Exception) {
+                // Fallback to default browser
+                val fallbackIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, pwaUri).apply {
+                  addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(fallbackIntent)
+              }
+            } catch (err: Exception) {
+              Toast.makeText(context, "Opening PWA in Browser...", Toast.LENGTH_SHORT).show()
+            }
             onInstallConfirmed()
-            Toast.makeText(
-              context,
-              LanguageStrings.get("pwa_installed_toast", currentLanguage),
-              Toast.LENGTH_LONG
-            ).show()
+            onDismiss()
           },
           modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
-            .testTag("confirm_install_button"),
-          shape = RoundedCornerShape(12.dp),
+            .height(50.dp)
+            .testTag("chrome_pwa_launch_button"),
+          shape = RoundedCornerShape(14.dp),
           colors = ButtonDefaults.buttonColors(
             containerColor = VerifiedGreen
           )
@@ -206,13 +221,85 @@ fun InstallPwaDialog(
           Icon(
             imageVector = Icons.Default.Download,
             contentDescription = null,
-            tint = Color.White
+            tint = Color.White,
+            modifier = Modifier.size(20.dp)
           )
           Spacer(modifier = Modifier.width(8.dp))
           Text(
-            text = LanguageStrings.get("pwa_install_now", currentLanguage),
+            text = if (isNepali) "क्रोममा PWA इन्स्टल गर्नुहोस् (Chrome Install)" else "Install on Android Chrome",
             color = Color.White,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 14.sp
+          )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Direct Download APK Button
+        Button(
+          onClick = {
+            try {
+              val apkUri = android.net.Uri.parse("https://ais-dev-6tryqtllcmrxdap6uhyf64-836283227085.asia-northeast1.run.app/bhakari.apk")
+              val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, apkUri)
+              context.startActivity(intent)
+              Toast.makeText(context, "Downloading Bhakari APK...", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+              Toast.makeText(context, "Export via AI Studio Settings menu", Toast.LENGTH_SHORT).show()
+            }
+          },
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(46.dp)
+            .testTag("download_apk_dialog_button"),
+          shape = RoundedCornerShape(12.dp),
+          colors = ButtonDefaults.buttonColors(
+            containerColor = BhakariGold
+          )
+        ) {
+          Icon(
+            imageVector = Icons.Default.Download,
+            contentDescription = null,
+            tint = Color.Black,
+            modifier = Modifier.size(18.dp)
+          )
+          Spacer(modifier = Modifier.width(8.dp))
+          Text(
+            text = if (isNepali) "एन्ड्रोइड APK डाउनलोड गर्नुहोस् (२८ MB)" else "Download Android APK (28 MB)",
+            color = Color.Black,
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
+          )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Native Shortcut Button
+        OutlinedButton(
+          onClick = {
+            onInstallConfirmed()
+            Toast.makeText(
+              context,
+              LanguageStrings.get("pwa_installed_toast", currentLanguage),
+              Toast.LENGTH_LONG
+            ).show()
+            onDismiss()
+          },
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .testTag("pin_shortcut_button"),
+          shape = RoundedCornerShape(12.dp)
+        ) {
+          Icon(
+            imageVector = Icons.Default.Home,
+            contentDescription = null,
+            tint = BhakariGold,
+            modifier = Modifier.size(16.dp)
+          )
+          Spacer(modifier = Modifier.width(6.dp))
+          Text(
+            text = LanguageStrings.get("pwa_install_now", currentLanguage),
+            fontWeight = FontWeight.SemiBold
           )
         }
 
@@ -222,10 +309,13 @@ fun InstallPwaDialog(
           onClick = onDismiss,
           modifier = Modifier
             .fillMaxWidth()
-            .height(44.dp),
+            .height(40.dp),
           shape = RoundedCornerShape(12.dp)
         ) {
-          Text(text = LanguageStrings.get("close", currentLanguage))
+          Text(
+            text = LanguageStrings.get("close", currentLanguage),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+          )
         }
       }
     }

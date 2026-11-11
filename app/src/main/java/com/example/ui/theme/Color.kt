@@ -14,10 +14,15 @@ val BhakariNavy = Color(0xFF0F172A)
 val BhakariNavySurface = Color(0xFF1E293B)
 val BhakariNavyCard = Color(0xFF283548)
 
-// Verified Tick Colors (Green tick for CEO Bir Pujara & verified users)
+// Verified Tick Colors (Green tick for CEO Bir Pujara & Facebook Blue for verified users)
 val VerifiedGreen = Color(0xFF10B981)
 val VerifiedGreenDark = Color(0xFF059669)
 val VerifiedGreenLight = Color(0xFFD1FAE5)
+
+// Facebook-Style Blue Verification Badge (Classic Blue)
+val FacebookVerifiedBlue = Color(0xFF1877F2)
+val FacebookVerifiedBlueDark = Color(0xFF0E5ACB)
+val FacebookVerifiedBlueLight = Color(0xFFE7F3FF)
 
 // Accent Colors
 val BhakariPurple = Color(0xFF8B5CF6)

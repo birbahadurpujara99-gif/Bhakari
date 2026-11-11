@@ -28,16 +28,20 @@ import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import coil.compose.AsyncImage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,6 +63,7 @@ import com.example.data.AppLanguage
 import com.example.data.LanguageStrings
 import com.example.model.MediaType
 import com.example.model.Post
+import com.example.model.User
 import com.example.ui.theme.BhakariCrimson
 import com.example.ui.theme.BhakariGold
 import com.example.ui.theme.BhakariNavyCard
@@ -74,10 +79,13 @@ fun PostCard(
   onShareClick: () -> Unit,
   onBluetoothShareClick: () -> Unit,
   onAuthorClick: () -> Unit,
+  onBadgeClick: ((User) -> Unit)? = null,
+  onReportClick: ((Post) -> Unit)? = null,
   modifier: Modifier = Modifier
 ) {
   val isNepali = currentLanguage == AppLanguage.NEPALI
   var isPlayingVideo by remember { mutableStateOf(false) }
+  var showPostMenu by remember { mutableStateOf(false) }
 
   val scaleAnim by animateFloatAsState(
     targetValue = if (post.isLiked) 1.15f else 1.0f,
@@ -116,7 +124,11 @@ fun PostCard(
             .padding(horizontal = 10.dp, vertical = 4.dp)
         ) {
           Row(verticalAlignment = Alignment.CenterVertically) {
-            VerifiedBadge(size = 14.dp)
+            VerifiedBadge(
+              size = 14.dp,
+              isCeo = true,
+              onClick = { onBadgeClick?.invoke(post.author) }
+            )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
               text = LanguageStrings.get("official_announcement", currentLanguage),
@@ -133,71 +145,122 @@ fun PostCard(
 
       // Header: Author Avatar, Name, Verified Tick, Role & Timestamp
       Row(
-        modifier = Modifier
-          .fillMaxWidth()
-          .clickable { onAuthorClick() },
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
       ) {
-        UserAvatar(
-          user = post.author,
-          size = 46.dp,
-          showBorder = post.author.isCeo,
-          showVerifiedBadge = true
-        )
+        Row(
+          modifier = Modifier
+            .weight(1f)
+            .clickable { onAuthorClick() },
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          UserAvatar(
+            user = post.author,
+            size = 46.dp,
+            showBorder = post.author.isCeo,
+            showVerifiedBadge = true,
+            onBadgeClick = { onBadgeClick?.invoke(post.author) }
+          )
 
-        Spacer(modifier = Modifier.width(10.dp))
+          Spacer(modifier = Modifier.width(10.dp))
 
-        Column(modifier = Modifier.weight(1f)) {
-          Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-              text = if (isNepali) post.author.nepaliName else post.author.name,
-              style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+          Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Text(
+                text = if (isNepali) post.author.nepaliName else post.author.name,
+                style = MaterialTheme.typography.titleMedium.copy(
+                  fontWeight = FontWeight.Bold,
+                  color = MaterialTheme.colorScheme.onSurface
+                )
               )
-            )
 
-            if (post.author.isCeo) {
-              Spacer(modifier = Modifier.width(6.dp))
-              VerifiedBadge(size = 15.dp, showLabel = true, labelText = "CEO")
-            } else if (post.author.isVerified) {
-              Spacer(modifier = Modifier.width(6.dp))
-              VerifiedBadge(size = 14.dp)
+              if (post.author.isCeo) {
+                Spacer(modifier = Modifier.width(6.dp))
+                VerifiedBadge(
+                  size = 15.dp,
+                  isCeo = true,
+                  showLabel = true,
+                  labelText = "CEO",
+                  onClick = { onBadgeClick?.invoke(post.author) }
+                )
+              } else if (post.author.hasBlueBadge) {
+                Spacer(modifier = Modifier.width(6.dp))
+                VerifiedBadge(
+                  size = 14.dp,
+                  isCeo = false,
+                  onClick = { onBadgeClick?.invoke(post.author) }
+                )
+              }
             }
-          }
 
-          Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-              text = "@${post.author.username}",
-              style = MaterialTheme.typography.labelSmall.copy(
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Text(
+                text = "@${post.author.username}",
+                style = MaterialTheme.typography.labelSmall.copy(
+                  color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
               )
-            )
-            Text(
-              text = " • ${post.timestamp} • ${post.location}",
-              style = MaterialTheme.typography.labelSmall.copy(
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+              Text(
+                text = " • ${post.timestamp} • ${post.location}",
+                style = MaterialTheme.typography.labelSmall.copy(
+                  color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                )
               )
-            )
+            }
           }
         }
 
-        // Quick Bluetooth Share Icon on top right of the card
-        Box(
-          modifier = Modifier
-            .clip(CircleShape)
-            .background(VerifiedGreen.copy(alpha = 0.12f))
-            .clickable { onBluetoothShareClick() }
-            .padding(8.dp)
-            .testTag("bluetooth_share_icon_${post.id}"),
-          contentAlignment = Alignment.Center
-        ) {
-          Icon(
-            imageVector = Icons.Default.Bluetooth,
-            contentDescription = "Share via Bluetooth",
-            tint = VerifiedGreen,
-            modifier = Modifier.size(18.dp)
-          )
+        // Quick Bluetooth Share Icon and More Menu
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Box(
+            modifier = Modifier
+              .clip(CircleShape)
+              .background(VerifiedGreen.copy(alpha = 0.12f))
+              .clickable { onBluetoothShareClick() }
+              .padding(8.dp)
+              .testTag("bluetooth_share_icon_${post.id}"),
+            contentAlignment = Alignment.Center
+          ) {
+            Icon(
+              imageVector = Icons.Default.Bluetooth,
+              contentDescription = "Share via Bluetooth",
+              tint = VerifiedGreen,
+              modifier = Modifier.size(18.dp)
+            )
+          }
+
+          Box {
+            IconButton(
+              onClick = { showPostMenu = true },
+              modifier = Modifier.size(36.dp)
+            ) {
+              Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "More options",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+              )
+            }
+            DropdownMenu(
+              expanded = showPostMenu,
+              onDismissRequest = { showPostMenu = false }
+            ) {
+              DropdownMenuItem(
+                text = { Text("Report Content") },
+                onClick = {
+                  showPostMenu = false
+                  onReportClick?.invoke(post)
+                }
+              )
+              DropdownMenuItem(
+                text = { Text("Share") },
+                onClick = {
+                  showPostMenu = false
+                  onShareClick()
+                }
+              )
+            }
+          }
         }
       }
 
@@ -238,7 +301,24 @@ fun PostCard(
       }
 
       // Media Section (Photo or Video)
-      if (post.mediaType == MediaType.PHOTO && post.imageRes != null) {
+      if (post.imageUrl.isNotBlank()) {
+        Spacer(modifier = Modifier.height(12.dp))
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .border(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(14.dp))
+        ) {
+          AsyncImage(
+            model = post.imageUrl,
+            contentDescription = "Post image",
+            modifier = Modifier
+              .fillMaxWidth()
+              .aspectRatio(16f / 9f),
+            contentScale = ContentScale.Crop
+          )
+        }
+      } else if (post.mediaType == MediaType.PHOTO && post.imageRes != null) {
         Spacer(modifier = Modifier.height(12.dp))
         Box(
           modifier = Modifier

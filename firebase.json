@@ -1,0 +1,14 @@
+{
+  "firestore": {
+    "database": "ai-studio-android-bhakari-220f0d5d-3d76-464c-9380-821ae9d2d7cb",
+    "rules": "firestore.rules"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8085
+    }
+  }
+}

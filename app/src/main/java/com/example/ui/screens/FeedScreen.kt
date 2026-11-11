@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -37,6 +38,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -65,6 +67,7 @@ import com.example.ui.components.VerifiedBadge
 import com.example.ui.theme.BhakariCrimson
 import com.example.ui.theme.BhakariGold
 import com.example.ui.theme.BhakariNavy
+import com.example.ui.theme.FacebookVerifiedBlue
 import com.example.ui.theme.VerifiedGreen
 
 @Composable
@@ -72,6 +75,7 @@ fun FeedScreen(
   posts: List<Post>,
   currentUser: User?,
   ceoUser: User,
+  allUsers: List<User> = emptyList(),
   currentLanguage: AppLanguage,
   onLikePost: (String) -> Unit,
   onOpenComments: (Post) -> Unit,
@@ -80,17 +84,43 @@ fun FeedScreen(
   onOpenCeoProfile: () -> Unit,
   onNavigateToCreatePost: () -> Unit,
   onOpenInstallDialog: () -> Unit,
+  onBadgeClick: ((User) -> Unit)? = null,
+  onReportClick: ((Post) -> Unit)? = null,
+  onOpenUserProfile: ((User) -> Unit)? = null,
   modifier: Modifier = Modifier
 ) {
   val isNepali = currentLanguage == AppLanguage.NEPALI
   var selectedFilter by remember { mutableIntStateOf(0) } // 0: All, 1: CEO, 2: Trending, 3: Culture
   var showPwaBanner by remember { mutableStateOf(true) }
+  var searchQuery by remember { mutableStateOf("") }
 
-  val filteredPosts = when (selectedFilter) {
-    1 -> posts.filter { it.author.isCeo || it.isCeoAnnouncement }
-    2 -> posts.sortedByDescending { it.likesCount }
-    3 -> posts.filter { it.tags.any { tag -> tag.contains("Culture") || tag.contains("Festival") } }
-    else -> posts
+  val matchingUsers = if (searchQuery.isNotBlank()) {
+    allUsers.filter {
+      it.name.contains(searchQuery, ignoreCase = true) ||
+      it.nepaliName.contains(searchQuery) ||
+      it.username.contains(searchQuery, ignoreCase = true) ||
+      it.title.contains(searchQuery, ignoreCase = true)
+    }
+  } else emptyList()
+
+  val filteredPosts = posts.filter { post ->
+    val matchesSearch = searchQuery.isBlank() ||
+      post.content.contains(searchQuery, ignoreCase = true) ||
+      post.nepaliContent.contains(searchQuery) ||
+      post.author.name.contains(searchQuery, ignoreCase = true) ||
+      post.author.nepaliName.contains(searchQuery) ||
+      post.tags.any { it.contains(searchQuery, ignoreCase = true) }
+
+    val matchesFilter = when (selectedFilter) {
+      1 -> post.author.isCeo || post.isCeoAnnouncement
+      2 -> true
+      3 -> post.tags.any { tag -> tag.contains("Culture") || tag.contains("Festival") }
+      else -> true
+    }
+
+    matchesSearch && matchesFilter
+  }.let { list ->
+    if (selectedFilter == 2) list.sortedByDescending { it.likesCount } else list
   }
 
   LazyColumn(
@@ -99,6 +129,118 @@ fun FeedScreen(
       .testTag("feed_lazy_column"),
     contentPadding = PaddingValues(bottom = 90.dp)
   ) {
+    // Search Bar
+    item {
+      Box(
+        modifier = Modifier
+          .fillMaxWidth()
+          .background(MaterialTheme.colorScheme.surface)
+          .padding(horizontal = 14.dp, vertical = 8.dp)
+      ) {
+        OutlinedTextField(
+          value = searchQuery,
+          onValueChange = { searchQuery = it },
+          placeholder = {
+            Text(
+              text = if (isNepali) "भाकारी खोज्नुहोस् (प्रयोगकर्ता, पोस्ट, विषय)..." else "Search Bhakari (users, posts, tags)...",
+              fontSize = 13.sp
+            )
+          },
+          leadingIcon = {
+            Icon(
+              imageVector = Icons.Default.Search,
+              contentDescription = "Search",
+              tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+          },
+          trailingIcon = {
+            if (searchQuery.isNotEmpty()) {
+              IconButton(onClick = { searchQuery = "" }) {
+                Icon(
+                  imageVector = Icons.Default.Close,
+                  contentDescription = "Clear search",
+                  tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+              }
+            }
+          },
+          singleLine = true,
+          shape = RoundedCornerShape(24.dp),
+          modifier = Modifier
+            .fillMaxWidth()
+            .testTag("feed_search_input")
+        )
+      }
+    }
+
+    // Matching Users Row when searching
+    if (searchQuery.isNotBlank() && matchingUsers.isNotEmpty()) {
+      item {
+        Column(
+          modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            .padding(vertical = 8.dp)
+        ) {
+          Text(
+            text = if (isNepali) "भेटिएका प्रयोगकर्ताहरू" else "Matching Users",
+            style = MaterialTheme.typography.labelMedium.copy(
+              fontWeight = FontWeight.Bold,
+              color = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp)
+          )
+
+          LazyRow(
+            contentPadding = PaddingValues(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+          ) {
+            items(matchingUsers) { user ->
+              Card(
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier
+                  .clickable {
+                    if (user.isCeo) onOpenCeoProfile() else onOpenUserProfile?.invoke(user)
+                  }
+                  .padding(vertical = 4.dp)
+              ) {
+                Row(
+                  verticalAlignment = Alignment.CenterVertically,
+                  modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                  UserAvatar(user = user, size = 32.dp, onBadgeClick = { onBadgeClick?.invoke(user) })
+                  Spacer(modifier = Modifier.width(8.dp))
+                  Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                      Text(
+                        text = user.name,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                      )
+                      if (user.hasBlueBadge) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        VerifiedBadge(
+                          size = 13.dp,
+                          isCeo = user.isCeo,
+                          onClick = { onBadgeClick?.invoke(user) }
+                        )
+                      }
+                    }
+                    Text(
+                      text = "@${user.username}",
+                      style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 10.sp
+                      )
+                    )
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
     // Top Stories / Moments Bar
     item {
       Column(
@@ -383,9 +525,13 @@ fun FeedScreen(
         onCommentClick = { onOpenComments(post) },
         onShareClick = { onOpenShare(post) },
         onBluetoothShareClick = { onBluetoothShare(post) },
+        onBadgeClick = onBadgeClick,
+        onReportClick = onReportClick,
         onAuthorClick = {
           if (post.author.isCeo) {
             onOpenCeoProfile()
+          } else {
+            onOpenUserProfile?.invoke(post.author)
           }
         }
       )
@@ -452,6 +598,7 @@ private fun StoryItem(
       } else if (isCeo) {
         VerifiedBadge(
           size = 18.dp,
+          isCeo = true,
           modifier = Modifier.align(Alignment.BottomEnd)
         )
       }

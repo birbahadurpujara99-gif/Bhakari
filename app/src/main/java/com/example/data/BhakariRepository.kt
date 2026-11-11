@@ -1,40 +1,63 @@
 package com.example.data
 
+import android.content.Context
 import com.example.R
+import com.example.model.AdminLog
+import com.example.model.Announcement
 import com.example.model.BluetoothDevicePeer
 import com.example.model.ChatMessage
 import com.example.model.Comment
-import com.example.model.Conversation
 import com.example.model.MediaType
 import com.example.model.Post
-import com.example.model.TransferStatus
+import com.example.model.Report
+import com.example.model.ReportStatus
 import com.example.model.User
+import com.example.model.VerificationRequest
+import com.example.model.VerificationStatus
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class BhakariRepository {
+class BhakariRepository(context: Context? = null) {
 
   private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
-  // CEO Bir Pujara - Official Verified Account with Green Verified Tick
+  // Cloud Firestore database connection using custom database ID
+  private val firestoreDb: FirebaseFirestore? = try {
+    if (context != null) {
+      FirebaseFirestore.getInstance(context.getString(R.string.firestore_database_id))
+    } else {
+      null
+    }
+  } catch (e: Exception) {
+    null
+  }
+
+  // CEO Bir Pujara - Official Account with Permanent Blue Verified Badge & Full Admin Control
   val ceoUser = User(
     id = "ceo_bir_pujara",
     name = "Bir Pujara",
     nepaliName = "वीर पुजारा",
+    hindiName = "बीर पुजारा",
     username = "birpujara_ceo",
     avatarRes = R.drawable.ceo_bir_pujara,
     avatarColorHex = 0xFF10B981,
     isVerified = true,
+    isBlueVerified = true,
     isCeo = true,
+    role = "ceo",
     title = "Founder & CEO, Bhakari",
     nepaliTitle = "संस्थापक तथा सिईओ, भकारी",
-    bio = "CEO & Founder of Bhakari Social Media. Connecting Nepalis worldwide with our secure social platform & Bluetooth nearby sharing. गर्वका साथ नेपाली! 🇳🇵🌾",
+    hindiTitle = "संस्थापक एवं सीईओ, भकारी",
+    bio = "CEO & Founder of Bhakari Social Media. Connecting communities worldwide with our secure platform & Bluetooth offline sharing! 🇳🇵🌾",
     nepaliBio = "भकारी सामाजिक सञ्जालका संस्थापक तथा सिईओ। विश्वभरका नेपालीहरूलाई जोड्दै, सुरक्षित प्रविधि र ब्लुटुथ सेयरिङका साथ! गर्वका साथ नेपाली! 🇳🇵🌾",
+    hindiBio = "भकारी सोशल मीडिया के संस्थापक एवं सीईओ। विश्वभर के समुदायों को सुरक्षित तकनीक से जोड़ते हुए! 🌾",
     email = "birbahadurpujara99@gmail.com",
     phone = "+977 9801234567",
     followersCount = 128450,
@@ -48,11 +71,14 @@ class BhakariRepository {
     id = "user_aarav",
     name = "Aarav Sharma",
     nepaliName = "आरभ शर्मा",
+    hindiName = "आरव शर्मा",
     username = "aarav_nepal",
     avatarColorHex = 0xFF3B82F6,
     isVerified = true,
-    title = "Traveler & Photographer",
-    nepaliTitle = "यात्री तथा फोटोग्राफर",
+    isBlueVerified = true,
+    role = "moderator", // Appointed moderator
+    title = "Traveler & Community Moderator",
+    nepaliTitle = "यात्री तथा समुदाय मोडरेटर",
     bio = "Capturing the beauty of the Himalayas 🏔️",
     nepaliBio = "हिमालको सुन्दरता क्यामेरामा कैद गर्दै 🏔️",
     followersCount = 14200,
@@ -64,9 +90,12 @@ class BhakariRepository {
     id = "user_prakriti",
     name = "Prakriti Shrestha",
     nepaliName = "प्रकृति श्रेष्ठ",
+    hindiName = "प्रकृति श्रेष्ठ",
     username = "prakriti_vibes",
     avatarColorHex = 0xFFEC4899,
     isVerified = false,
+    isBlueVerified = false,
+    role = "user",
     title = "Cultural Creator",
     nepaliTitle = "सांस्कृतिक सिर्जनाकर्ता",
     bio = "Celebrating Nepali art, songs, and food! 🥟🪔",
@@ -76,20 +105,61 @@ class BhakariRepository {
     postsCount = 64
   )
 
-  // Current Logged In User
+  val userSunita = User(
+    id = "user_sunita",
+    name = "Sunita KC",
+    nepaliName = "सुनिता केसी",
+    hindiName = "सुनीता केसी",
+    username = "sunita_news",
+    avatarColorHex = 0xFF8B5CF6,
+    isVerified = false,
+    isBlueVerified = false,
+    role = "user",
+    title = "Independent Journalist",
+    nepaliTitle = "स्वतन्त्र पत्रकार",
+    bio = "Covering stories from rural Nepal. Truth & voice! 📰🎙️",
+    nepaliBio = "नेपालका ग्रामीण कथा र सत्य आवाज उजागर गर्दै! 📰🎙️",
+    followersCount = 18400,
+    followingCount = 210,
+    postsCount = 95
+  )
+
+  val userDeepak = User(
+    id = "user_deepak",
+    name = "Deepak Bajracharya",
+    nepaliName = "दीपक बज्राचार्य",
+    hindiName = "दीपक बज्राचार्य",
+    username = "deepak_music",
+    avatarColorHex = 0xFFEF4444,
+    isVerified = true,
+    isBlueVerified = true,
+    role = "user",
+    title = "Musician & Performer",
+    nepaliTitle = "सङ्गीतकार तथा कलाकार",
+    bio = "Nepali melodies, contemporary beats 🎸🎶",
+    nepaliBio = "नेपाली सुमधुर धुन र सङ्गीत 🎸🎶",
+    followersCount = 92000,
+    followingCount = 180,
+    postsCount = 140
+  )
+
+  // Current Logged In User State
   private val _currentUser = MutableStateFlow<User?>(
     User(
       id = "me_suman",
       name = "Suman Thapa",
       nepaliName = "सुमन थापा",
+      hindiName = "सुमन थापा",
       username = "suman_thapa",
       avatarColorHex = 0xFFF59E0B,
       isVerified = false,
+      isBlueVerified = false,
+      role = "user",
       title = "Bhakari Member",
       nepaliTitle = "भकारी सदस्य",
       bio = "Tech enthusiast from Kathmandu. Loving the new Bhakari app! 🚀",
       nepaliBio = "काठमाडौंबाट प्रविधि प्रेमी। नयाँ भकारी एप निकै मन पर्यो! 🚀",
-      email = "suman.thapa@example.com",
+      email = "suman.thapa@bhakari.np",
       phone = "+977 9841000000",
       followersCount = 420,
       followingCount = 180,
@@ -98,16 +168,12 @@ class BhakariRepository {
   )
   val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
-  // App Language State
+  // App Language State: Support English, Nepali, and Hindi
   private val _currentLanguage = MutableStateFlow(AppLanguage.NEPALI)
   val currentLanguage: StateFlow<AppLanguage> = _currentLanguage.asStateFlow()
 
   fun toggleLanguage() {
-    _currentLanguage.value = if (_currentLanguage.value == AppLanguage.NEPALI) {
-      AppLanguage.ENGLISH
-    } else {
-      AppLanguage.NEPALI
-    }
+    _currentLanguage.value = _currentLanguage.value.next()
   }
 
   fun setLanguage(lang: AppLanguage) {
@@ -135,8 +201,29 @@ class BhakariRepository {
   private val _lastTransferNotice = MutableStateFlow<String?>(null)
   val lastTransferNotice: StateFlow<String?> = _lastTransferNotice.asStateFlow()
 
+  // All Users Directory (For Community & Badge Control)
+  private val _allUsers = MutableStateFlow<List<User>>(emptyList())
+  val allUsers: StateFlow<List<User>> = _allUsers.asStateFlow()
+
+  // Verification Requests State (For CEO Bir Pujara Admin Dashboard)
+  private val _verificationRequests = MutableStateFlow<List<VerificationRequest>>(emptyList())
+  val verificationRequests: StateFlow<List<VerificationRequest>> = _verificationRequests.asStateFlow()
+
+  // Reports Queue State (For CEO and Moderators)
+  private val _reports = MutableStateFlow<List<Report>>(emptyList())
+  val reports: StateFlow<List<Report>> = _reports.asStateFlow()
+
+  // Platform Announcements State
+  private val _announcements = MutableStateFlow<List<Announcement>>(emptyList())
+  val announcements: StateFlow<List<Announcement>> = _announcements.asStateFlow()
+
+  // Admin Activity Log State
+  private val _adminLogs = MutableStateFlow<List<AdminLog>>(emptyList())
+  val adminLogs: StateFlow<List<AdminLog>> = _adminLogs.asStateFlow()
+
   init {
     initSeedData()
+    syncWithFirestore()
   }
 
   private fun initSeedData() {
@@ -164,14 +251,15 @@ class BhakariRepository {
         id = "post_ceo_announcement",
         author = ceoUser,
         timestamp = "Just now",
-        content = "Namaste everyone! 🌾 As CEO, I am thrilled to officially launch Bhakari - our very own indigenous social media platform. You can now post photos, videos, chat directly, and share posts & contacts offline with nearby friends using Bluetooth! Thank you for trusting us. Proudly Nepali! 🇳🇵✨",
-        nepaliContent = "नमस्ते सम्पूर्णमा! 🌾 सिईओको रूपमा, नेपालको आफ्नै मौलिक रङ्गीन सामाजिक सञ्जाल भकारीको शुभारम्भ गर्न पाउँदा म अत्यन्तै हर्षित छु। अब फोटो, भिडियो पोस्ट गर्न, च्याट गर्न र इन्टरनेट बिना नै नजिकका साथीहरूसँग ब्लुटुथ मार्फत पोस्ट र सम्पर्क आदान-प्रदान गर्न सक्नुहुन्छ! सबैलाई हार्दिक स्वागत छ! 🇳🇵✨",
+        content = "Namaste everyone! 🌾 As Founder & CEO, I am thrilled to welcome you to Bhakari. Our platform now features real-time Facebook-style blue verification badges (🔵✓), complete administrative oversight, and offline Bluetooth radar sharing. Proudly connecting communities! 🇳🇵✨",
+        nepaliContent = "नमस्ते सम्पूर्णमा! 🌾 भकारीमा सबैलाई हार्दिक स्वागत छ। हाम्रो प्लेटफर्ममा अब फेसबुक-शैलीको निलो प्रमाणित टिक (🔵✓), सिईओ प्रशासनिक नियन्त्रण र अफलाइन ब्लुटुथ सेयरिङ पूर्ण रूपमा सञ्चालनमा आएको छ। गर्वका साथ नेपाली! 🇳🇵✨",
+        hindiContent = "नमस्ते सभी को! 🌾 भकारी में आप सभी का हार्दिक स्वागत है। हमारे प्लेटफॉर्म पर अब फेसबुक-स्टाइल नीला वेरिफिकेशन टिक (🔵✓) और ऑफलाइन ब्लूटूथ शेयरिंग उपलब्ध है।",
         mediaType = MediaType.PHOTO,
         imageRes = R.drawable.bhakari_cover_art,
-        tags = listOf("#BhakariLaunch", "#CEOAnnouncement", "#BirPujara", "#DigitalNepal", "#ConnectingNepalis"),
-        likesCount = 3842,
-        commentsCount = 248,
-        sharesCount = 590,
+        tags = listOf("#BhakariPlatform", "#BirPujara", "#BlueVerified", "#NepaliInnovation"),
+        likesCount = 4120,
+        commentsCount = 280,
+        sharesCount = 610,
         isLiked = true,
         comments = initialComments,
         isCeoAnnouncement = true,
@@ -208,60 +296,94 @@ class BhakariRepository {
         isLiked = false,
         comments = emptyList(),
         location = "Pokhara, Nepal"
-      ),
-      Post(
-        id = "post_ceo_tech",
-        author = ceoUser,
-        timestamp = "1 day ago",
-        content = "Tip from CEO Bir Pujara: Did you know you can share your favorite Bhakari posts and contact card with nearby users using our Bluetooth Radar? Even without mobile data, connection never stops! 📡📱",
-        nepaliContent = "सिईओ वीर पुजाराको जानकारी: के तपाईंलाई थाहा छ, तपाईंले आफ्नो मनपर्ने भकारी पोस्ट र सम्पर्क कार्ड ब्लुटुथ राडारबाट वरपरका साथीहरूलाई पठाउन सक्नुहुन्छ? इन्टरनेट डेटा सकिए पनि हाम्रो सम्पर्क टुट्दैन! 📡📱",
-        mediaType = MediaType.TEXT_ONLY,
-        tags = listOf("#BhakariFeatures", "#BluetoothShare", "#OfflineSocial", "#NepaliInnovation"),
-        likesCount = 2150,
-        commentsCount = 112,
-        sharesCount = 330,
-        isLiked = true,
-        comments = emptyList(),
-        isCeoAnnouncement = true,
-        location = "Bhakari HQ, Nepal"
       )
     )
 
     _posts.value = seedPosts
 
-    // Initial Chat Messages with CEO Bir Pujara
-    val ceoChatHistory = listOf(
-      ChatMessage(
-        id = "m1",
-        senderId = ceoUser.id,
-        recipientId = "me_suman",
-        text = "Namaste Suman! Welcome to Bhakari. As CEO, I am here to ensure you have a wonderful experience on our platform. 🇳🇵🌾",
-        nepaliText = "नमस्ते सुमनजी! भकारीमा हार्दिक स्वागत छ। हाम्रो प्लेटफर्ममा तपाईंको अनुभव उत्कृष्ट बनाउन सिईओको रूपमा म सधैं तयार छु। 🇳🇵🌾",
-        timestamp = "10:30 AM",
-        isFromMe = false
+    // Initial Users
+    val currentUserObj = _currentUser.value
+    _allUsers.value = listOfNotNull(
+      ceoUser,
+      currentUserObj,
+      userAarav,
+      userPrakriti,
+      userSunita,
+      userDeepak
+    )
+
+    // Initial Verification Applications
+    _verificationRequests.value = listOf(
+      VerificationRequest(
+        id = "req_prakriti_01",
+        user = userPrakriti,
+        category = "Cultural Creator / Artist",
+        nepaliCategory = "सांस्कृतिक सिर्जनाकर्ता / कलाकार",
+        documentType = "National Identity Card (राष्ट्रिय परिचयपत्र)",
+        reason = "Promoting traditional folk songs and heritage. Reached 8.9k authentic community followers.",
+        knownAs = "Prakriti Vibes",
+        websiteOrLink = "https://bhakari.np/@prakriti_vibes",
+        status = VerificationStatus.PENDING,
+        submittedAt = "Today at 09:15 AM"
       ),
-      ChatMessage(
-        id = "m2",
-        senderId = "me_suman",
-        recipientId = ceoUser.id,
-        text = "Namaste CEO Bir Pujara Sir! Really loving the colorful design and the Bluetooth sharing feature. Great job!",
-        nepaliText = "नमस्ते सिईओ वीर पुजारा सर! रङ्गीन डिजाइन र ब्लुटुथ सेयरिङ फिचर मलाई निकै मन पर्यो। धेरै धेरै धन्यवाद!",
-        timestamp = "10:32 AM",
-        isFromMe = true
-      ),
-      ChatMessage(
-        id = "m3",
-        senderId = ceoUser.id,
-        recipientId = "me_suman",
-        text = "Thank you so much! Feel free to suggest any new features directly here. Enjoy connecting!",
-        nepaliText = "धेरै धेरै धन्यवाद! कुनै पनि नयाँ सुझाव भए मलाई सिधै यहीँ सन्देश पठाउन सक्नुहुन्छ। रमाउनुहोस्!",
-        timestamp = "10:35 AM",
-        isFromMe = false
+      VerificationRequest(
+        id = "req_sunita_02",
+        user = userSunita,
+        category = "Journalist / News Reporter",
+        nepaliCategory = "पत्रकार / समाचार सम्प्रेषक",
+        documentType = "Press Council Nepal Card",
+        reason = "Independent journalist covering local community development in Karnali.",
+        knownAs = "Sunita KC",
+        websiteOrLink = "https://presscouncilnepal.gov.np/reporters/sunita-kc",
+        status = VerificationStatus.PENDING,
+        submittedAt = "Yesterday at 04:30 PM"
       )
     )
 
-    _chatMessages.value = mapOf(
-      ceoUser.id to ceoChatHistory
+    // Initial Reports for Moderation Review
+    _reports.value = listOf(
+      Report(
+        id = "rep_01",
+        reporterUserId = "user_aarav",
+        reporterName = "Aarav Sharma",
+        reportedType = "comment",
+        targetId = "c_spam_99",
+        targetContentSnippet = "Suspicious financial spam link detected in public comments",
+        reason = "Spam / Unauthorized advertisement link",
+        status = ReportStatus.PENDING,
+        createdAt = "1 hour ago"
+      )
+    )
+
+    // Initial Announcements
+    _announcements.value = listOf(
+      Announcement(
+        id = "ann_01",
+        title = "Official Launch of Bhakari Blue Verification & Moderation",
+        nepaliTitle = "भकारी निलो ब्याच तथा मोडरेसन प्रणालीको शुभारम्भ",
+        message = "All creators and public figures can now submit verification requests directly from profile settings. Verified badges are reviewed and granted by CEO Bir Pujara.",
+        nepaliMessage = "अब सबै सिर्जनाकर्ता र व्यक्तित्वहरूले प्रोफाइल सेटिङबाट सिधै निलो प्रमाणित ब्याचका लागि आवेदन दिन सक्नुहुन्छ।",
+        authorName = "Bir Pujara (CEO)",
+        createdAt = "Today at 10:00 AM"
+      )
+    )
+
+    // Initial Admin Logs
+    _adminLogs.value = listOf(
+      AdminLog(
+        id = "log_01",
+        adminName = "Bir Pujara (CEO)",
+        action = "Platform Launched",
+        details = "CEO Bir Pujara initiated Bhakari platform with verified badge controls",
+        timestamp = "Today at 09:00 AM"
+      ),
+      AdminLog(
+        id = "log_02",
+        adminName = "Bir Pujara (CEO)",
+        action = "Promoted Moderator",
+        details = "Promoted Aarav Sharma (@aarav_nepal) to community moderator",
+        timestamp = "Today at 09:30 AM"
+      )
     )
 
     // Initial Nearby Bluetooth Peers
@@ -270,7 +392,7 @@ class BhakariRepository {
         id = "bt_ceo_device",
         name = "Bir Pujara's Flagship (CEO)",
         deviceAddress = "74:D2:1D:9C:B1:01",
-        rssi = -42, // Strong signal
+        rssi = -42,
         isBhakariUser = true,
         associatedUser = ceoUser
       ),
@@ -289,15 +411,82 @@ class BhakariRepository {
         rssi = -64,
         isBhakariUser = true,
         associatedUser = userPrakriti
-      ),
-      BluetoothDevicePeer(
-        id = "bt_kathmandu_hub",
-        name = "Kathmandu Tech Hub Router",
-        deviceAddress = "E0:2B:99:33:44:55",
-        rssi = -75,
-        isBhakariUser = false
       )
     )
+  }
+
+  private fun syncWithFirestore() {
+    if (firestoreDb == null) return
+    coroutineScope.launch(Dispatchers.IO) {
+      try {
+        // Sync CEO User profile to Firestore to guarantee permanent CEO account
+        firestoreDb.collection("users").document(ceoUser.id).set(ceoUser)
+      } catch (e: Exception) {
+        // Safe fallback
+      }
+    }
+  }
+
+  // Edit and Save User Profile Permanently
+  fun updateUserProfile(updatedUser: User) {
+    _currentUser.value = updatedUser
+    _allUsers.value = _allUsers.value.map { if (it.id == updatedUser.id) updatedUser else it }
+    _posts.value = _posts.value.map { post ->
+      if (post.author.id == updatedUser.id) post.copy(author = updatedUser) else post
+    }
+    // Save to Firestore
+    if (firestoreDb != null) {
+      coroutineScope.launch(Dispatchers.IO) {
+        try {
+          firestoreDb.collection("users").document(updatedUser.id).set(updatedUser)
+        } catch (e: Exception) {
+          // Fallback
+        }
+      }
+    }
+  }
+
+  fun updateUserProfile(
+    name: String,
+    username: String,
+    bio: String,
+    avatarUri: String? = null,
+    coverUri: String? = null,
+    isPrivate: Boolean = false,
+    allowMessages: Boolean = true,
+    allowBluetooth: Boolean = true
+  ) {
+    val current = _currentUser.value ?: return
+    val updated = current.copy(
+      name = name,
+      username = username,
+      bio = bio,
+      avatarUrl = if (!avatarUri.isNullOrBlank()) avatarUri else current.avatarUrl,
+      coverUrl = if (!coverUri.isNullOrBlank()) coverUri else current.coverUrl,
+      isPrivateAccount = isPrivate,
+      allowMessagesFromAnyone = allowMessages,
+      allowBluetoothDiscovery = allowBluetooth
+    )
+    updateUserProfile(updated)
+  }
+
+  // Delete User Account
+  fun deleteAccount(userId: String = _currentUser.value?.id ?: "") {
+    if (userId.isBlank()) return
+    _allUsers.value = _allUsers.value.filterNot { it.id == userId }
+    _posts.value = _posts.value.filterNot { it.author.id == userId }
+    if (_currentUser.value?.id == userId) {
+      _currentUser.value = null
+    }
+    if (firestoreDb != null) {
+      coroutineScope.launch(Dispatchers.IO) {
+        try {
+          firestoreDb.collection("users").document(userId).delete()
+        } catch (e: Exception) {
+          // Fallback
+        }
+      }
+    }
   }
 
   // Like / Unlike Post
@@ -339,17 +528,13 @@ class BhakariRepository {
   // Share Post increment
   fun sharePost(postId: String) {
     _posts.value = _posts.value.map { post ->
-      if (post.id == postId) {
-        post.copy(sharesCount = post.sharesCount + 1)
-      } else {
-        post
-      }
+      if (post.id == postId) post.copy(sharesCount = post.sharesCount + 1) else post
     }
   }
 
-  // Create new Post
+  // Create Post
   fun createPost(content: String, mediaType: MediaType, tag: String = "#Bhakari") {
-    val author = _currentUser.value ?: userAarav
+    val author = _currentUser.value ?: ceoUser
     val newPost = Post(
       id = "post_${System.currentTimeMillis()}",
       author = author,
@@ -358,132 +543,376 @@ class BhakariRepository {
       nepaliContent = content,
       mediaType = mediaType,
       imageRes = if (mediaType == MediaType.PHOTO) R.drawable.bhakari_cover_art else null,
-      videoThumbnailRes = if (mediaType == MediaType.VIDEO) R.drawable.bhakari_cover_art else null,
-      videoTitle = if (mediaType == MediaType.VIDEO) "Bhakari Community Video" else null,
-      tags = listOf(tag, "#CommunityPost", "#Bhakari"),
+      tags = listOf(tag, "#BhakariCommunity"),
       likesCount = 1,
       commentsCount = 0,
       sharesCount = 0,
       isLiked = true,
       comments = emptyList(),
+      isCeoAnnouncement = author.isCeo,
       location = "Nepal"
     )
     _posts.value = listOf(newPost) + _posts.value
+
+    if (firestoreDb != null) {
+      coroutineScope.launch(Dispatchers.IO) {
+        try {
+          firestoreDb.collection("posts").document(newPost.id).set(newPost)
+        } catch (e: Exception) {
+          // Fallback
+        }
+      }
+    }
   }
 
-  // Send Chat Message
+  // Send Message in Chat
   fun sendMessage(recipientId: String, text: String) {
-    val currentList = _chatMessages.value[recipientId] ?: emptyList()
-    val msg = ChatMessage(
-      id = "m_${System.currentTimeMillis()}",
-      senderId = _currentUser.value?.id ?: "me_suman",
+    val sender = _currentUser.value ?: ceoUser
+    val newMessage = ChatMessage(
+      id = "msg_${System.currentTimeMillis()}",
+      senderId = sender.id,
       recipientId = recipientId,
       text = text,
       nepaliText = text,
       timestamp = "Just now",
       isFromMe = true
     )
-    _chatMessages.value = _chatMessages.value + (recipientId to (currentList + msg))
-
-    // If talking to CEO Bir Pujara, simulate an immediate warm CEO response
-    if (recipientId == ceoUser.id) {
-      coroutineScope.launch {
-        delay(1200)
-        val repliesEn = listOf(
-          "Thank you for reaching out, my friend! We are committed to making Bhakari the best social platform for all Nepalis. 🌾🇳🇵",
-          "Noted! As CEO, I am personally reviewing feedback from our community. Thank you for your support!",
-          "Great to hear from you! Don't forget to try our nearby Bluetooth post sharing feature with your friends."
-        )
-        val repliesNe = listOf(
-          "सम्पर्क गर्नुभएकोमा धन्यवाद साथी! भकारीलाई सम्पूर्ण नेपालीहरूको उत्कृष्ट सामाजिक सञ्जाल बनाउन हामी समर्पित छौं। 🌾🇳🇵",
-          "मैले टिपेको छु! सिईओको रूपमा समुदायबाट आउने हरेक सुझावलाई म व्यक्तिगत रूपमा हेरिरहेको छु।",
-          "तपाईंसँग कुरा गर्न पाउँदा खुसी लाग्यो! आफ्ना साथीहरूसँग ब्लुटुथ नजिकैको पोस्ट सेयरिङ फिचर पनि प्रयोग गर्नुहोला।"
-        )
-        val randomIndex = (0..2).random()
-        val ceoReply = ChatMessage(
-          id = "m_reply_${System.currentTimeMillis()}",
-          senderId = ceoUser.id,
-          recipientId = _currentUser.value?.id ?: "me_suman",
-          text = repliesEn[randomIndex],
-          nepaliText = repliesNe[randomIndex],
-          timestamp = "Just now",
-          isFromMe = false
-        )
-        val updatedList = _chatMessages.value[recipientId] ?: emptyList()
-        _chatMessages.value = _chatMessages.value + (recipientId to (updatedList + ceoReply))
-      }
-    }
+    val currentHistory = _chatMessages.value[recipientId] ?: emptyList()
+    _chatMessages.value = _chatMessages.value + (recipientId to (currentHistory + newMessage))
   }
 
-  // Bluetooth scanning simulation
+  // Bluetooth Radar Controls
   fun startBluetoothScan() {
     _isBluetoothScanning.value = true
-    coroutineScope.launch {
-      delay(2000)
-      _isBluetoothScanning.value = false
-    }
   }
 
   fun toggleDiscoverable() {
     _isDiscoverable.value = !_isDiscoverable.value
   }
 
-  // Share Post over Bluetooth
-  fun sharePostOverBluetooth(peerId: String, post: Post, onDone: (Boolean) -> Unit) {
-    _nearbyPeers.value = _nearbyPeers.value.map { peer ->
-      if (peer.id == peerId) peer.copy(transferStatus = TransferStatus.SENDING) else peer
-    }
-    coroutineScope.launch {
-      delay(1500)
-      _nearbyPeers.value = _nearbyPeers.value.map { peer ->
-        if (peer.id == peerId) peer.copy(transferStatus = TransferStatus.COMPLETED) else peer
-      }
-      _lastTransferNotice.value = "Post '${post.content.take(25)}...' shared via Bluetooth!"
-      onDone(true)
-      delay(3000)
-      _nearbyPeers.value = _nearbyPeers.value.map { peer ->
-        if (peer.id == peerId) peer.copy(transferStatus = TransferStatus.IDLE) else peer
-      }
-    }
+  fun sharePostOverBluetooth(peerId: String, post: Post, onComplete: (Boolean) -> Unit) {
+    val peer = _nearbyPeers.value.find { it.id == peerId }
+    _lastTransferNotice.value = "Post shared with ${peer?.name ?: "nearby peer"} via Bluetooth!"
+    onComplete(true)
   }
 
-  // Share Contact over Bluetooth
-  fun shareContactOverBluetooth(peerId: String, onDone: (Boolean) -> Unit) {
-    val me = _currentUser.value ?: userAarav
-    _nearbyPeers.value = _nearbyPeers.value.map { peer ->
-      if (peer.id == peerId) peer.copy(transferStatus = TransferStatus.SENDING) else peer
-    }
-    coroutineScope.launch {
-      delay(1500)
-      _nearbyPeers.value = _nearbyPeers.value.map { peer ->
-        if (peer.id == peerId) peer.copy(transferStatus = TransferStatus.COMPLETED) else peer
-      }
-      _lastTransferNotice.value = "Contact Card of ${me.name} (${me.phone}) sent via Bluetooth!"
-      onDone(true)
-      delay(3000)
-      _nearbyPeers.value = _nearbyPeers.value.map { peer ->
-        if (peer.id == peerId) peer.copy(transferStatus = TransferStatus.IDLE) else peer
-      }
-    }
+  fun shareContactOverBluetooth(peerId: String, onComplete: (Boolean) -> Unit) {
+    val peer = _nearbyPeers.value.find { it.id == peerId }
+    val user = _currentUser.value ?: ceoUser
+    _lastTransferNotice.value = "Contact Card (${user.name}) shared with ${peer?.name ?: "nearby peer"}!"
+    onComplete(true)
   }
 
-  // Authentication
-  fun loginWithPhone(phoneNumber: String, code: String): Boolean {
-    val cleanPhone = if (phoneNumber.isBlank()) "+977 9800000000" else phoneNumber
-    _currentUser.value = User(
-      id = "user_phone_${System.currentTimeMillis()}",
-      name = "Phone User (${cleanPhone.takeLast(4)})",
-      nepaliName = "फोन प्रयोगकर्ता (${cleanPhone.takeLast(4)})",
-      username = "user_${cleanPhone.filter { it.isDigit() }.takeLast(6)}",
-      avatarColorHex = 0xFF10B981,
-      isVerified = false,
-      title = "Bhakari Phone Member",
-      nepaliTitle = "भकारी फोन सदस्य",
-      bio = "Connected via phone number authentication. 🇳🇵",
-      nepaliBio = "मोबाइल नम्बर मार्फत जोडिनुभएको सदस्य। 🇳🇵",
-      phone = cleanPhone,
-      email = "user@bhakari.np"
+  // Verification Application Submission by User
+  fun submitVerificationRequest(
+    category: String,
+    nepaliCategory: String = "",
+    docType: String,
+    reason: String,
+    knownAs: String = "",
+    link: String = ""
+  ): Boolean {
+    val user = _currentUser.value ?: return false
+    val newReq = VerificationRequest(
+      id = "req_${System.currentTimeMillis()}",
+      user = user,
+      category = category,
+      nepaliCategory = nepaliCategory,
+      documentType = docType,
+      reason = reason,
+      knownAs = knownAs,
+      websiteOrLink = link,
+      status = VerificationStatus.PENDING,
+      submittedAt = "Just now"
     )
+    _verificationRequests.value = listOf(newReq) + _verificationRequests.value
+
+    if (firestoreDb != null) {
+      coroutineScope.launch(Dispatchers.IO) {
+        try {
+          firestoreDb.collection("verification_requests").document(newReq.id).set(newReq)
+        } catch (e: Exception) {
+          // Fallback
+        }
+      }
+    }
+    return true
+  }
+
+  fun submitVerificationRequest(reason: String, websiteOrLink: String = "", category: String = "Creator"): Boolean {
+    return submitVerificationRequest(category, "", "ID_CARD", reason, "", websiteOrLink)
+  }
+
+  // CEO Bir Pujara: Approve Verification Request & Grant Blue Badge
+  fun approveVerificationRequest(requestId: String, adminUser: User): Boolean {
+    if (!adminUser.isCeo) return false // Security check: Only CEO Bir Pujara
+    val targetReq = _verificationRequests.value.find { it.id == requestId } ?: return false
+
+    _verificationRequests.value = _verificationRequests.value.map { req ->
+      if (req.id == requestId) req.copy(status = VerificationStatus.APPROVED, reviewNote = "Approved by CEO Bir Pujara") else req
+    }
+    syncUserBadges(targetReq.user.id, isBlueVerified = true)
+    addAdminLog(adminUser.name, "Approved Verification", "Granted blue badge to ${targetReq.user.name} (@${targetReq.user.username})")
+    return true
+  }
+
+  fun approveVerificationRequest(requestId: String): Boolean =
+    approveVerificationRequest(requestId, ceoUser)
+
+  // CEO Bir Pujara: Reject Verification Request
+  fun rejectVerificationRequest(requestId: String, note: String, adminUser: User): Boolean {
+    if (!adminUser.isCeo) return false // Security check: Only CEO Bir Pujara
+    val targetReq = _verificationRequests.value.find { it.id == requestId } ?: return false
+    _verificationRequests.value = _verificationRequests.value.map { req ->
+      if (req.id == requestId) req.copy(status = VerificationStatus.REJECTED, reviewNote = note.ifBlank { "Insufficient public presence documents" }) else req
+    }
+    addAdminLog(adminUser.name, "Rejected Verification", "Rejected application for ${targetReq.user.name}: $note")
+    return true
+  }
+
+  fun rejectVerificationRequest(requestId: String, note: String): Boolean =
+    rejectVerificationRequest(requestId, note, ceoUser)
+
+  // CEO Bir Pujara: Grant Blue Badge directly
+  fun grantBlueBadgeToUser(userId: String, adminUser: User): Boolean {
+    if (!adminUser.isCeo) return false // Security check
+    syncUserBadges(userId, isBlueVerified = true)
+    val u = _allUsers.value.find { it.id == userId }
+    addAdminLog(adminUser.name, "Granted Blue Badge", "Directly granted blue badge to ${u?.name ?: userId}")
+    return true
+  }
+
+  fun grantBlueBadge(userId: String): Boolean =
+    grantBlueBadgeToUser(userId, ceoUser)
+
+  fun removeBlueBadge(userId: String): Boolean =
+    removeBlueBadgeFromUser(userId, ceoUser)
+
+  fun promoteToModerator(userId: String): Boolean =
+    promoteToModerator(userId, ceoUser)
+
+  fun demoteModerator(userId: String): Boolean =
+    demoteModerator(userId, ceoUser)
+
+  fun blockUser(userId: String): Boolean =
+    blockUser(userId, ceoUser)
+
+  fun unblockUser(userId: String): Boolean =
+    unblockUser(userId, ceoUser)
+
+  fun suspendUser(userId: String): Boolean =
+    suspendUser(userId, ceoUser)
+
+  fun reactivateUser(userId: String): Boolean =
+    reactivateUser(userId, ceoUser)
+
+  fun reportPost(postId: String, reason: String) =
+    reportPost(postId, reason, userAarav)
+
+  fun removePost(postId: String): Boolean =
+    removePost(postId, ceoUser)
+
+  fun dismissReport(reportId: String): Boolean =
+    dismissReport(reportId, ceoUser)
+
+  fun createAnnouncement(title: String, body: String, nepaliTitle: String = "", nepaliMessage: String = ""): Boolean =
+    createAnnouncement(title, nepaliTitle.ifBlank { title }, "", body, nepaliMessage.ifBlank { body }, "", ceoUser)
+
+
+  // CEO Bir Pujara: Remove Blue Badge directly
+  fun removeBlueBadgeFromUser(userId: String, adminUser: User): Boolean {
+    if (!adminUser.isCeo) return false // Security check
+    syncUserBadges(userId, isBlueVerified = false)
+    val u = _allUsers.value.find { it.id == userId }
+    addAdminLog(adminUser.name, "Removed Blue Badge", "Removed blue badge from ${u?.name ?: userId}")
+    return true
+  }
+
+  // Moderator Management (Only CEO can appoint or remove moderators)
+  fun promoteToModerator(userId: String, adminUser: User): Boolean {
+    if (!adminUser.isCeo) return false
+    _allUsers.value = _allUsers.value.map { if (it.id == userId) it.copy(role = "moderator") else it }
+    val u = _allUsers.value.find { it.id == userId }
+    addAdminLog(adminUser.name, "Promoted Moderator", "Appointed ${u?.name ?: userId} as platform moderator")
+    return true
+  }
+
+  fun demoteModerator(userId: String, adminUser: User): Boolean {
+    if (!adminUser.isCeo) return false
+    _allUsers.value = _allUsers.value.map { if (it.id == userId) it.copy(role = "user") else it }
+    val u = _allUsers.value.find { it.id == userId }
+    addAdminLog(adminUser.name, "Removed Moderator", "Demoted ${u?.name ?: userId} to standard member")
+    return true
+  }
+
+  // User Account Controls: Block / Suspend / Reactivate
+  fun blockUser(userId: String, adminUser: User): Boolean {
+    if (!adminUser.isCeo) return false
+    _allUsers.value = _allUsers.value.map { if (it.id == userId) it.copy(isBlocked = true) else it }
+    val u = _allUsers.value.find { it.id == userId }
+    addAdminLog(adminUser.name, "Blocked User", "Blocked account of ${u?.name ?: userId}")
+    return true
+  }
+
+  fun unblockUser(userId: String, adminUser: User): Boolean {
+    if (!adminUser.isCeo) return false
+    _allUsers.value = _allUsers.value.map { if (it.id == userId) it.copy(isBlocked = false) else it }
+    val u = _allUsers.value.find { it.id == userId }
+    addAdminLog(adminUser.name, "Unblocked User", "Restored access for ${u?.name ?: userId}")
+    return true
+  }
+
+  fun suspendUser(userId: String, adminUser: User): Boolean {
+    if (!adminUser.isCeo) return false
+    _allUsers.value = _allUsers.value.map { if (it.id == userId) it.copy(isSuspended = true) else it }
+    val u = _allUsers.value.find { it.id == userId }
+    addAdminLog(adminUser.name, "Suspended User", "Suspended account of ${u?.name ?: userId}")
+    return true
+  }
+
+  fun reactivateUser(userId: String, adminUser: User): Boolean {
+    if (!adminUser.isCeo) return false
+    _allUsers.value = _allUsers.value.map { if (it.id == userId) it.copy(isSuspended = false) else it }
+    val u = _allUsers.value.find { it.id == userId }
+    addAdminLog(adminUser.name, "Reactivated User", "Reactivated account of ${u?.name ?: userId}")
+    return true
+  }
+
+  // Content Moderation (CEO & Appointed Moderators)
+  fun reportPost(postId: String, reason: String, reporter: User) {
+    _posts.value = _posts.value.map { if (it.id == postId) it.copy(isReported = true, reportReason = reason) else it }
+    val post = _posts.value.find { it.id == postId }
+    val rep = Report(
+      id = "rep_${System.currentTimeMillis()}",
+      reporterUserId = reporter.id,
+      reporterName = reporter.name,
+      reportedType = "post",
+      targetId = postId,
+      targetContentSnippet = post?.content?.take(60) ?: "Reported post",
+      reason = reason,
+      status = ReportStatus.PENDING,
+      createdAt = "Just now"
+    )
+    _reports.value = listOf(rep) + _reports.value
+  }
+
+  fun removePost(postId: String, staffUser: User): Boolean {
+    if (!staffUser.isCeo && !staffUser.isModerator) return false
+    _posts.value = _posts.value.map { if (it.id == postId) it.copy(isRemoved = true) else it }
+    _reports.value = _reports.value.map { if (it.targetId == postId) it.copy(status = ReportStatus.RESOLVED) else it }
+    addAdminLog(staffUser.name, "Removed Inappropriate Post", "Removed offending post ID: $postId")
+    return true
+  }
+
+  fun dismissReport(reportId: String, staffUser: User): Boolean {
+    if (!staffUser.isCeo && !staffUser.isModerator) return false
+    val rep = _reports.value.find { it.id == reportId }
+    _reports.value = _reports.value.map { if (it.id == reportId) it.copy(status = ReportStatus.DISMISSED) else it }
+    if (rep != null) {
+      _posts.value = _posts.value.map { if (it.id == rep.targetId) it.copy(isReported = false) else it }
+    }
+    return true
+  }
+
+  // Broadcast Platform Announcement
+  fun createAnnouncement(
+    title: String,
+    nepaliTitle: String,
+    hindiTitle: String = "",
+    message: String,
+    nepaliMessage: String,
+    hindiMessage: String = "",
+    adminUser: User
+  ): Boolean {
+    if (!adminUser.isCeo) return false
+    val ann = Announcement(
+      id = "ann_${System.currentTimeMillis()}",
+      title = title,
+      nepaliTitle = nepaliTitle,
+      hindiTitle = hindiTitle,
+      message = message,
+      nepaliMessage = nepaliMessage,
+      hindiMessage = hindiMessage,
+      authorName = "Bir Pujara (CEO)",
+      createdAt = "Just now"
+    )
+    _announcements.value = listOf(ann) + _announcements.value
+    // Also create feed announcement post
+    val announcementPost = Post(
+      id = "post_ann_${System.currentTimeMillis()}",
+      author = ceoUser,
+      timestamp = "Just now",
+      content = "$title\n\n$message",
+      nepaliContent = "$nepaliTitle\n\n$nepaliMessage",
+      hindiContent = "$hindiTitle\n\n$hindiMessage",
+      mediaType = MediaType.TEXT_ONLY,
+      tags = listOf("#OfficialAnnouncement", "#CEOUpdate", "#BhakariAlert"),
+      isCeoAnnouncement = true,
+      likesCount = 120,
+      commentsCount = 14,
+      sharesCount = 50,
+      isLiked = true
+    )
+    _posts.value = listOf(announcementPost) + _posts.value
+    addAdminLog(adminUser.name, "Broadcast Announcement", "Sent platform announcement: $title")
+    return true
+  }
+
+  private fun addAdminLog(adminName: String, action: String, details: String) {
+    val log = AdminLog(
+      id = "log_${System.currentTimeMillis()}",
+      adminName = adminName,
+      action = action,
+      details = details,
+      timestamp = "Just now"
+    )
+    _adminLogs.value = listOf(log) + _adminLogs.value
+  }
+
+  private fun syncUserBadges(userId: String, isBlueVerified: Boolean) {
+    _allUsers.value = _allUsers.value.map { u ->
+      if (u.id == userId) u.copy(isBlueVerified = isBlueVerified, isVerified = isBlueVerified) else u
+    }
+    if (_currentUser.value?.id == userId) {
+      _currentUser.value = _currentUser.value?.copy(isBlueVerified = isBlueVerified, isVerified = isBlueVerified)
+    }
+    _posts.value = _posts.value.map { post ->
+      val updatedAuthor = if (post.author.id == userId) {
+        post.author.copy(isBlueVerified = isBlueVerified, isVerified = isBlueVerified)
+      } else post.author
+      val updatedComments = post.comments.map { comment ->
+        if (comment.author.id == userId) {
+          comment.copy(author = comment.author.copy(isBlueVerified = isBlueVerified, isVerified = isBlueVerified))
+        } else comment
+      }
+      post.copy(author = updatedAuthor, comments = updatedComments)
+    }
+  }
+
+  fun searchUsers(query: String): List<User> {
+    if (query.isBlank()) return _allUsers.value
+    return _allUsers.value.filter {
+      it.name.contains(query, ignoreCase = true) ||
+      it.nepaliName.contains(query) ||
+      it.username.contains(query, ignoreCase = true) ||
+      it.title.contains(query, ignoreCase = true)
+    }
+  }
+
+  // Auth Operations
+  fun loginWithPhone(phone: String, otp: String): Boolean {
+    val user = User(
+      id = "user_phone_${System.currentTimeMillis()}",
+      name = "Bhakari User",
+      nepaliName = "भकारी प्रयोगकर्ता",
+      hindiName = "भकारी उपयोगकर्ता",
+      username = "user_${phone.takeLast(4)}",
+      phone = phone,
+      isVerified = false,
+      isBlueVerified = false,
+      role = "user"
+    )
+    _currentUser.value = user
     return true
   }
 
@@ -491,7 +920,7 @@ class BhakariRepository {
     val cleanEmail = if (email.isBlank()) "user@bhakari.np" else email
     val namePart = cleanEmail.substringBefore("@").replace(".", " ").capitalizeWords()
     
-    // Check if logging in as CEO
+    // Check if logging in as CEO Bir Pujara
     if (cleanEmail.contains("birbahadurpujara", ignoreCase = true) || cleanEmail.contains("birpujara", ignoreCase = true)) {
       _currentUser.value = ceoUser
       return true
@@ -501,36 +930,59 @@ class BhakariRepository {
       id = "user_email_${System.currentTimeMillis()}",
       name = namePart,
       nepaliName = namePart,
+      hindiName = namePart,
       username = cleanEmail.substringBefore("@"),
       avatarColorHex = 0xFF8B5CF6,
       isVerified = false,
-      title = "Bhakari Member",
-      nepaliTitle = "भकारी सदस्य",
-      bio = "Active Bhakari community member. 🌾",
-      nepaliBio = "भकारी समुदायका सक्रिय सदस्य। 🌾",
-      email = cleanEmail,
-      phone = "+977 98XXXXXXXX"
+      isBlueVerified = false,
+      role = "user",
+      email = cleanEmail
     )
     return true
   }
 
+  fun loginWithGoogle(email: String, displayName: String, avatarUrl: String? = null, idToken: String = ""): Boolean {
+    if (email.contains("birbahadurpujara", ignoreCase = true) || email.contains("birpujara", ignoreCase = true)) {
+      _currentUser.value = ceoUser
+      return true
+    }
+    val googleUser = User(
+      id = "user_google_${System.currentTimeMillis()}",
+      name = displayName.ifBlank { "Google User" },
+      nepaliName = displayName.ifBlank { "गुगल प्रयोगकर्ता" },
+      hindiName = displayName.ifBlank { "गूगल उपयोगकर्ता" },
+      username = email.substringBefore("@"),
+      email = email,
+      avatarUrl = avatarUrl ?: "",
+      isVerified = false,
+      isBlueVerified = false,
+      role = "user"
+    )
+    _currentUser.value = googleUser
+    updateUserProfile(googleUser)
+    return true
+  }
+
+  fun loginWithGoogle(idToken: String, displayName: String, email: String): Boolean =
+    loginWithGoogle(email = email, displayName = displayName, avatarUrl = null, idToken = idToken)
+
   fun signupWithEmail(fullName: String, email: String, pass: String): Boolean {
     val validName = if (fullName.isBlank()) "New Member" else fullName
     val validEmail = if (email.isBlank()) "member@bhakari.np" else email
-    _currentUser.value = User(
+    val newUser = User(
       id = "user_signup_${System.currentTimeMillis()}",
       name = validName,
       nepaliName = validName,
+      hindiName = validName,
       username = validEmail.substringBefore("@"),
       avatarColorHex = 0xFFEC4899,
       isVerified = false,
-      title = "New Bhakari Creator",
-      nepaliTitle = "नयाँ भकारी सिर्जनाकर्ता",
-      bio = "Excited to share stories and connect on Bhakari! 🇳🇵",
-      nepaliBio = "भकारीमा जोडिएर कथा र विचारहरू बाँड्न पाउँदा उत्साहित! 🇳🇵",
-      email = validEmail,
-      phone = "+977 98XXXXXXXX"
+      isBlueVerified = false,
+      role = "user",
+      email = validEmail
     )
+    _currentUser.value = newUser
+    updateUserProfile(newUser)
     return true
   }
 

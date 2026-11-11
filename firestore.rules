@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isCeoUser() {
+      return isAuthenticated() && (
+        request.auth.token.email == "birbahadurpujara99@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCeo == true)
+      );
+    }
+
+    function isStaffUser() {
+      return isAuthenticated() && (
+        isCeoUser() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "moderator")
+      );
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+
+      allow create: if isAuthenticated() && request.auth.uid == userId && (
+        // Only CEO email can initialize with CEO or Verified status
+        (request.auth.token.email == "birbahadurpujara99@gmail.com") ||
+        (request.resource.data.isCeo == false &&
+         request.resource.data.isBlueVerified == false &&
+         request.resource.data.isVerified == false &&
+         request.resource.data.role == "user")
+      );
+
+      allow update: if isAuthenticated() && (
+        isCeoUser() ||
+        (request.auth.uid == userId &&
+         request.resource.data.isCeo == resource.data.isCeo &&
+         request.resource.data.isBlueVerified == resource.data.isBlueVerified &&
+         request.resource.data.isVerified == resource.data.isVerified &&
+         request.resource.data.role == resource.data.role &&
+         request.resource.data.isBlocked == resource.data.isBlocked &&
+         request.resource.data.isSuspended == resource.data.isSuspended)
+      );
+
+      allow delete: if isCeoUser() || (isAuthenticated() && request.auth.uid == userId);
+    }
+
+    // Posts collection
+    match /posts/{postId} {
+      allow read: if isAuthenticated() && (!resource.data.isRemoved || isStaffUser());
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.isRemoved == false;
+
+      allow update: if isAuthenticated() && (
+        isStaffUser() ||
+        // Post author update or interaction counter updates
+        (request.auth.uid == resource.data.userId) ||
+        // Any user can increment likesCount, commentsCount, sharesCount without altering content
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount', 'commentsCount', 'sharesCount', 'updatedAt']))
+      );
+
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isCeoUser());
+
+      // Nested comments subcollection
+      match /comments/{commentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && request.resource.data.authorId == request.auth.uid;
+        allow update, delete: if isAuthenticated() && (request.auth.uid == resource.data.authorId || isStaffUser());
+      }
+    }
+
+    // Verification Requests collection
+    match /verification_requests/{requestId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isCeoUser());
+
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.status == "PENDING";
+
+      allow update: if isCeoUser();
+      allow delete: if isCeoUser() || (isAuthenticated() && request.auth.uid == resource.data.userId);
+    }
+
+    // Reports collection
+    match /reports/{reportId} {
+      allow create: if isAuthenticated() && request.resource.data.reporterUserId == request.auth.uid;
+      allow read, update, delete: if isStaffUser();
+    }
+
+    // Announcements collection
+    match /announcements/{announcementId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isCeoUser();
+    }
+
+    // Admin activity logs
+    match /admin_logs/{logId} {
+      allow read: if isCeoUser();
+      allow create: if isStaffUser();
+      allow update, delete: if false; // Immutable audit log
+    }
+  }
+}

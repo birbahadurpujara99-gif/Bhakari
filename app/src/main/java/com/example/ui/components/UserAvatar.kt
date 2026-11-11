@@ -22,9 +22,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.model.User
 import com.example.ui.theme.BhakariGold
-import com.example.ui.theme.VerifiedGreen
+import com.example.ui.theme.FacebookVerifiedBlue
 
 @Composable
 fun UserAvatar(
@@ -32,12 +33,13 @@ fun UserAvatar(
   modifier: Modifier = Modifier,
   size: Dp = 48.dp,
   showBorder: Boolean = false,
-  showVerifiedBadge: Boolean = true
+  showVerifiedBadge: Boolean = true,
+  onBadgeClick: (() -> Unit)? = null
 ) {
   val borderBrush = if (user.isCeo) {
-    Brush.sweepGradient(listOf(VerifiedGreen, BhakariGold, VerifiedGreen))
-  } else if (user.isVerified) {
-    Brush.linearGradient(listOf(VerifiedGreen, Color(0xFF3B82F6)))
+    Brush.sweepGradient(listOf(FacebookVerifiedBlue, BhakariGold, FacebookVerifiedBlue))
+  } else if (user.hasBlueBadge) {
+    Brush.linearGradient(listOf(FacebookVerifiedBlue, Color(0xFF60A5FA)))
   } else {
     Brush.linearGradient(listOf(BhakariGold, Color(0xFFE11D48)))
   }
@@ -61,14 +63,25 @@ fun UserAvatar(
         )
         .clip(CircleShape)
         .background(
-          if (user.avatarRes == null) Color(user.avatarColorHex) else Color.Transparent
+          if (user.avatarRes == null && user.avatarUrl.isBlank()) Color(user.avatarColorHex) else Color.Transparent
         )
     ) {
-      if (user.avatarRes != null) {
+      if (user.avatarUrl.isNotBlank()) {
+        AsyncImage(
+          model = user.avatarUrl,
+          contentDescription = user.name,
+          modifier = Modifier
+            .size(size)
+            .clip(CircleShape),
+          contentScale = ContentScale.Crop
+        )
+      } else if (user.avatarRes != null) {
         Image(
           painter = painterResource(id = user.avatarRes),
           contentDescription = user.name,
-          modifier = Modifier.clip(CircleShape),
+          modifier = Modifier
+            .size(size)
+            .clip(CircleShape),
           contentScale = ContentScale.Crop
         )
       } else {
@@ -88,9 +101,11 @@ fun UserAvatar(
       }
     }
 
-    if (showVerifiedBadge && (user.isCeo || user.isVerified)) {
+    if (showVerifiedBadge && (user.isCeo || user.hasBlueBadge)) {
       VerifiedBadge(
         size = (size * 0.35f).coerceAtLeast(14.dp),
+        isCeo = user.isCeo,
+        onClick = onBadgeClick,
         modifier = Modifier
           .align(Alignment.BottomEnd)
           .offset(x = 2.dp, y = 2.dp)

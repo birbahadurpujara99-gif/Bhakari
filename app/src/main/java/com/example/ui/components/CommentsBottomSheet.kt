@@ -199,7 +199,7 @@ private fun CommentItem(
     UserAvatar(
       user = comment.author,
       size = 36.dp,
-      showVerifiedBadge = comment.author.isCeo || comment.author.isVerified
+      showVerifiedBadge = comment.author.isCeo || comment.author.hasBlueBadge
     )
 
     Spacer(modifier = Modifier.width(10.dp))
@@ -221,7 +221,10 @@ private fun CommentItem(
         )
         if (comment.author.isCeo) {
           Spacer(modifier = Modifier.width(4.dp))
-          VerifiedBadge(size = 12.dp)
+          VerifiedBadge(size = 12.dp, isCeo = true)
+        } else if (comment.author.hasBlueBadge) {
+          Spacer(modifier = Modifier.width(4.dp))
+          VerifiedBadge(size = 12.dp, isCeo = false)
         }
         Spacer(modifier = Modifier.width(6.dp))
         Text(
